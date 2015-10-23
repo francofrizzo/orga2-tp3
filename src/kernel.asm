@@ -28,8 +28,6 @@ iniciando_mp_len equ    $ - iniciando_mp_msg
 ;; Punto de entrada del kernel.
 BITS 16
 start:
-    xchg bx, bx
-
     ; Deshabilitar interrupciones
     cli
 
@@ -63,16 +61,19 @@ BITS 32
     modoprotegido:
 
     ; Establecer selectores de segmentos
-    mov cs, 0x40
-    mov ds, 0x50
-    mov ss, 0x50
+    mov ax, 0x50
+    mov ds, ax
+    mov ss, ax
 
     ; Establecer la base de la pila
-    mov ebp, 0x27000
     mov esp, 0x27000
+    mov ebp, 0x27000
 
-    mov es, 0x60
-    mov word [0x60:0x0], 
+    mov ax, 0x60
+    mov es, ax
+
+
+    mov word [es:0x0], 0x0F41
 
     ; Imprimir mensaje de bienvenida
 
