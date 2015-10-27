@@ -84,14 +84,53 @@ BITS 32
 
     ; Inicializar pantalla
 
+    ;pintar de negro primer fila
     ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
-    push dw 01010000 ; esto deberia ser un 80
-    push dw 00101100 ; esto es un 44 se supone
-    push dw 0
-    push dw 1
-    push 00110010
-    push 00110010
+    push dword 80
+    push dword 1
+    push dword 0
+    push dword 0
+    push 00000000b
+    push ' '
+    call screen_pintar_rect
+    ;pintar de gris:
+    ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
+    push dword 80 ; esto deberia ser un 80
+    push dword 44 ; esto es un 44 se supone
+    push dword 0
+    push dword 1
+    push 01110111b
+    push ' '
     
+    call screen_pintar_rect
+
+    ;pintar ultimas filas de negro
+    ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
+    push dword 80
+    push dword 5
+    push dword 0
+    push dword 45
+    push 00000000b
+    push ' '
+    call screen_pintar_rect
+
+    ;pintar de rojo y azul
+    ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
+    push dword 7
+    push dword 5
+    push dword 33
+    push dword 45
+    push 01000100b ;rojo
+    push ' '
+    call screen_pintar_rect
+
+    ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
+    push dword 7
+    push dword 5
+    push dword 40
+    push dword 45
+    push 00010001b ;azul
+    push ' '
     call screen_pintar_rect
 
     ; Inicializar el manejador de memoria
