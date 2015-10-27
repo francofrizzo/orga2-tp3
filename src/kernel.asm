@@ -10,6 +10,9 @@ global start
 extern GDT_DESC
 extern screen_pintar_rect
 
+extern IDT_DESC
+extern idt_inicializar
+
 ;; Saltear seccion de datos
 jmp start
 
@@ -21,6 +24,12 @@ iniciando_mr_len equ    $ - iniciando_mr_msg
 
 iniciando_mp_msg db     'Iniciando kernel (Modo Protegido)...'
 iniciando_mp_len equ    $ - iniciando_mp_msg
+
+SEG_COD_KERNEL  equ 0x40
+SEG_COD_USER    equ 0x4B
+SEG_DATA_KERNEL equ 0x50
+SEG_DATA_USER   equ 0x5B
+SEG_VIDEO       equ 0x60
 
 ;;
 ;; Seccion de código.
@@ -84,14 +93,53 @@ BITS 32
 
     ; Inicializar pantalla
 
+    ;pintar de negro primer fila
     ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
-    push dword 80 ; esto deberia ser un 80
-    push dword 00101100b ; esto es un 44 se supone
+    push dword 80
+    push dword 1
+    push dword 0
+    push dword 0
+    push 00000000b
+    push ' '
+    call screen_pintar_rect
+    ;pintar de gris:
+    ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
+    push dword 80
+    push dword 44
     push dword 0
     push dword 1
     push 01110111b
     push ' '
     
+    call screen_pintar_rect
+
+    ;pintar ultimas filas de negro
+    ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
+    push dword 80
+    push dword 5
+    push dword 0
+    push dword 45
+    push 00000000b
+    push ' '
+    call screen_pintar_rect
+
+    ;pintar de rojo y azul
+    ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
+    push dword 7
+    push dword 5
+    push dword 33
+    push dword 45
+    push 01000100b ;rojo
+    push ' '
+    call screen_pintar_rect
+
+    ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
+    push dword 7
+    push dword 5
+    push dword 40
+    push dword 45
+    push 00010001b ;azul
+    push ' '
     call screen_pintar_rect
 
     ; Inicializar el manejador de memoria
@@ -109,8 +157,12 @@ BITS 32
     ; Inicializar el scheduler
 
     ; Inicializar la IDT
+    call idt_inicializar
 
     ; Cargar IDT
+    lidt [IDT_DESC]
+
+    int 3
 
     ; Configurar controlador de interrupciones
 
