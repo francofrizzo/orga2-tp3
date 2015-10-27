@@ -41,6 +41,12 @@ typedef unsigned int   uint;
 
 /* Selectores de segmentos */
 /* -------------------------------------------------------------------------- */
-
+#define SEG_COD_KERNEL              0x40
+#define SEG_COD_USER_AS_KERNEL      0x48
+#define SEG_COD_USER                0x4B
+#define SEG_DATA_KERNEL             0x50
+#define SEG_DATA_USER_AS_KERNEL     0x58
+#define SEG_DATA_USER               0x5B
+#define SEG_VIDEO                   0x60
 
 #endif  /* !__DEFINES_H__ */

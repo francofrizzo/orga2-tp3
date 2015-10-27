@@ -55,14 +55,14 @@ start:
     mov cr0, eax
 
     ; Saltar a modo protegido
-    jmp 0x40:modoprotegido
+    jmp SEG_COD_KERNEL:modoprotegido
 
 BITS 32
 
     modoprotegido:
 
     ; Establecer selectores de segmentos
-    mov ax, 0x50
+    mov ax, SEG_DATA_KERNEL
     mov ds, ax
     mov ss, ax
 
@@ -70,7 +70,7 @@ BITS 32
     mov esp, 0x27000
     mov ebp, 0x27000
 
-    mov ax, 0x60
+    mov ax, SEG_VIDEO
     mov es, ax
 
 
@@ -85,12 +85,12 @@ BITS 32
     ; Inicializar pantalla
 
     ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
-    push dw 01010000 ; esto deberia ser un 80
-    push dw 00101100 ; esto es un 44 se supone
-    push dw 0
-    push dw 1
-    push 00110010
-    push 00110010
+    push dword 80 ; esto deberia ser un 80
+    push dword 00101100b ; esto es un 44 se supone
+    push dword 0
+    push dword 1
+    push 01110111b
+    push ' '
     
     call screen_pintar_rect
 
