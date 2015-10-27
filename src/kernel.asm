@@ -8,6 +8,7 @@
 global start
 
 extern GDT_DESC
+extern screen_pintar_rect
 
 ;; Saltear seccion de datos
 jmp start
@@ -75,11 +76,23 @@ BITS 32
 
     mov word [es:0x0], 0x0F41
 
+
+
     ; Imprimir mensaje de bienvenida
 
     ; Inicializar el juego
 
     ; Inicializar pantalla
+
+    ;void screen_pintar_rect(uchar letra, uchar color, int fila, int columna, int alto, int ancho)
+    push dw 01010000 ; esto deberia ser un 80
+    push dw 00101100 ; esto es un 44 se supone
+    push dw 0
+    push dw 1
+    push 00110010
+    push 00110010
+    
+    call screen_pintar_rect
 
     ; Inicializar el manejador de memoria
 
