@@ -13,6 +13,9 @@ extern screen_pintar_rect
 extern IDT_DESC
 extern idt_inicializar
 
+extern CR3_KERNEL
+extern mmu_inicializar_dir_kernel
+
 ;; Saltear seccion de datos
 jmp start
 
@@ -110,7 +113,6 @@ BITS 32
     push dword 1
     push 01110111b
     push ' '
-    
     call screen_pintar_rect
 
     ;pintar ultimas filas de negro
@@ -145,10 +147,16 @@ BITS 32
     ; Inicializar el manejador de memoria
 
     ; Inicializar el directorio de paginas
+    call mmu_inicializar_dir_kernel
 
     ; Cargar directorio de paginas
+    mov eax, CR3_KERNEL
+    mov cr3, eax
 
     ; Habilitar paginacion
+    mov eax, cr0
+    or eax, 0x80000000
+    mov cr0, eax
 
     ; Inicializar tss
 
