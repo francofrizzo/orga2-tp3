@@ -11,13 +11,17 @@ BITS 32
 sched_tarea_offset:     dd 0x00
 sched_tarea_selector:   dw 0x00
 
+;; Pantalla
+extern screen_limpiar
+extern print
+extern print_dec
+
 ;; PIC
 extern fin_intr_pic1
 
 ;; Sched
 extern sched_atender_tick
 extern sched_tarea_actual
-
 
 ;;
 ;; Definición de MACROS
@@ -27,7 +31,23 @@ extern sched_tarea_actual
 global _isr%1
 
 _isr%1:
-    mov eax, %1
+    mov ebx, %1
+
+    call screen_limpiar
+
+    push word  0x0F           ; attr
+    push dword 0              ; y
+    push dword 0              ; x
+    push excepcion_msg        ; text
+    call print
+
+    push word  0x0F           ; attr
+    push dword 0              ; y
+    push dword excepcion_len  ; x
+    push dword 2              ; size
+    push ebx                  ; numero
+    call print_dec
+    
     jmp $
 
 %endmacro
@@ -35,6 +55,10 @@ _isr%1:
 ;;
 ;; Datos
 ;; -------------------------------------------------------------------------- ;;
+
+excepcion_msg db  "Se produjo una excepcion de tipo", 0
+excepcion_len equ $ - excepcion_msg
+
 ; Scheduler
 
 ;;

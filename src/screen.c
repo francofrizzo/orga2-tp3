@@ -281,3 +281,8 @@ void screen_stop_game_show_winner(jugador_t *j) {
     while(1){}
 }
 
+void screen_limpiar()
+{
+    screen_pintar_rect(' ', 0, 0, 0, VIDEO_FILS, VIDEO_COLS);
+}
+

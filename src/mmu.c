@@ -31,11 +31,11 @@
 /* -------------------------------------------------------------------------- */
 
 void mmu_mapear_pagina (uint virtual, uint cr3, uint fisica, uint attrs) {
-	uint pd_index = virtual >> 22;
-	uint pt_index = (virtual >> 12) & 0x000003FF;
+	uint pd_index = virtual >> 22;                   // nos quedamos con los 10 bits más significativos
+	uint pt_index = (virtual >> 12) & 0x000003FF;    // nos quedamos con los 10 que siguen
 	
-	uint* pd = (uint*) (cr3 & 0xFFFFF000);
-	uint* pt = (uint*) (pd[pd_index] & 0xFFFFF000);
+	uint* pd = (uint*) (cr3 & 0xFFFFF000);           // usamos la info de CR3 para encontrar el directorio
+	uint* pt = (uint*) (pd[pd_index] & 0xFFFFF000);  // buscamos a la tabla de paginas en el directorio
 
 	pt[pt_index] = (fisica & 0xFFFFF000) | (attrs & 0x00000FFF);
 }
@@ -55,4 +55,16 @@ uint mmu_inicializar_dir_kernel() {
 	}
 
 	return (uint) pd_kernel;
+}
+
+uint mmu_unmapear_pagina (uint virtual, uint cr3) {
+	uint pd_index = virtual >> 22;                   // nos quedamos con los 10 bits más significativos
+	uint pt_index = (virtual >> 12) & 0x000003FF;    // nos quedamos con los 10 que siguen
+	
+	uint* pd = (uint*) (cr3 & 0xFFFFF000);           // usamos la info de CR3 para encontrar el directorio
+	uint* pt = (uint*) (pd[pd_index] & 0xFFFFF000);  // buscamos a la tabla de paginas en el directorio
+
+	pt[pt_index] = pt[pt_index] & 0xFFFFFFFE;        // ponemos en 0 el bit de presente
+
+	return 0;
 }
