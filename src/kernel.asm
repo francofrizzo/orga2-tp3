@@ -16,6 +16,8 @@ extern idt_inicializar
 extern CR3_KERNEL
 extern mmu_inicializar_dir_kernel
 
+extern print
+
 ;; Saltear seccion de datos
 jmp start
 
@@ -27,6 +29,9 @@ iniciando_mr_len equ    $ - iniciando_mr_msg
 
 iniciando_mp_msg db     'Iniciando kernel (Modo Protegido)...'
 iniciando_mp_len equ    $ - iniciando_mp_msg
+
+nombre_grupo_msg db     'Smelly Cat'
+nombre_grupo_len equ    $ - nombre_grupo_msg
 
 SEG_COD_KERNEL  equ 0x40
 SEG_COD_USER    equ 0x4B
@@ -150,13 +155,20 @@ BITS 32
     call mmu_inicializar_dir_kernel
 
     ; Cargar directorio de paginas
-    mov eax, CR3_KERNEL
     mov cr3, eax
 
     ; Habilitar paginacion
     mov eax, cr0
     or eax, 0x80000000
     mov cr0, eax
+
+    ; Probamos que siga andando todo imprimiendo el nombre del grupo
+        ; void print(const char * text, unsigned int x, unsigned int y, unsigned short attr);
+    push word  0x0F        ; attr
+    push dword 0           ; y
+    push dword 70          ; x
+    push nombre_grupo_msg  ;text
+    call print
 
     ; Inicializar tss
 

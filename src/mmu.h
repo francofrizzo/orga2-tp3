@@ -16,8 +16,6 @@
 #define MAPA_BASE_FISICA  0x500000
 #define MAPA_BASE_VIRTUAL 0x800000
 
-extern uint CR3_KERNEL;
-
 void mmu_inicializar();
 
 
