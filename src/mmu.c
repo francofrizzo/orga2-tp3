@@ -95,5 +95,5 @@ void mmu_copiar_pagina(uint src, uint dst) {
 }
 
 uint mmu_inicializar_memoria_perro(perro_t *perro, int index_jugador, int index_tipo) {
-    
+    return 0;
 }

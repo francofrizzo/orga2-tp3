@@ -17,6 +17,8 @@ extern GDT_DESC
 ;; Interrupciones
 extern IDT_DESC
 extern idt_inicializar
+extern resetear_pic
+extern habilitar_pic
 
 ;; Manejo de memoria
 extern CR3_KERNEL
@@ -218,7 +220,11 @@ BITS 32
 
     ; Cargar tarea inicial
 
+
     ; Habilitar interrupciones
+    call resetear_pic
+    call habilitar_pic
+    sti
 
     ; Saltar a la primera tarea: Idle
 

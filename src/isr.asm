@@ -23,6 +23,12 @@ extern fin_intr_pic1
 extern sched_atender_tick
 extern sched_tarea_actual
 
+;; Rutinas de alto nivel
+extern game_atender_tick
+extern game_perro_actual
+extern game_atender_teclado
+extern game_syscall_manejar
+
 ;;
 ;; Definición de MACROS
 ;; -------------------------------------------------------------------------- ;;
@@ -90,12 +96,53 @@ ISR 19
 ;; Rutina de atención del RELOJ
 ;; -------------------------------------------------------------------------- ;;
 
+global _isr32
+_isr32:
+    
+    pushad
+    call fin_intr_pic1
+    
+    push game_perro_actual
+    call game_atender_tick
+    add esp, 4
+    
+    popad
+    iret
+
 ;;
 ;; Rutina de atención del TECLADO
 ;; -------------------------------------------------------------------------- ;;
+
+global _isr33
+_isr33:
+    
+    pushad
+    call fin_intr_pic1
+    
+    in al, 0x60
+    push ax
+    call game_atender_teclado
+    add esp, 2
+    
+    popad
+    iret
 
 ;;
 ;; Rutinas de atención de las SYSCALLS
 ;; -------------------------------------------------------------------------- ;;
 
+global _isr46
+_isr46:
+    
+    pushad
+    
+    push ecx
+    push eax
+    call game_syscall_manejar
+    add esp, 2 * 4
+    
+    popad
+    mov eax, 0x42
+
+    iret
 
