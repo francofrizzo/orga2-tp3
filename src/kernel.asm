@@ -7,6 +7,10 @@
 
 global start
 
+;;
+;; Variables y funciones externas
+;; -------------------------------------------------------------------------- ;;
+
 ;; Segmentacion
 extern GDT_DESC
 
@@ -18,30 +22,39 @@ extern idt_inicializar
 extern CR3_KERNEL
 extern mmu_inicializar_dir_kernel
 extern mmu_unmapear_pagina
+extern mmu_inicializar
 
 ;; Pantalla
 extern print
+PRINT_ARGS_SIZE equ 2 + 3 * 4
 extern screen_pintar_rect
-
-;; Saltear seccion de datos
-jmp start
+SCREEN_PINTAR_RECT_ARGS_SIZE equ 2 + 4 * 4
+extern screen_inicializar
 
 ;;
-;; Seccion de datos.
+;; Defines
 ;; -------------------------------------------------------------------------- ;;
-iniciando_mr_msg db     'Iniciando kernel (Modo Real)...'
-iniciando_mr_len equ    $ - iniciando_mr_msg
-
-iniciando_mp_msg db     'Iniciando kernel (Modo Protegido)...'
-iniciando_mp_len equ    $ - iniciando_mp_msg
-
-nombre_grupo     db     'Smelly Cat', 0
-
 SEG_COD_KERNEL   equ    0x40
 SEG_COD_USER     equ    0x4B
 SEG_DATA_KERNEL  equ    0x50
 SEG_DATA_USER    equ    0x5B
 SEG_VIDEO        equ    0x60
+
+%define BREAKPOINT xchg bx, bx
+
+;; Saltear seccion de datos
+jmp start
+
+;;
+;; Seccion de datos
+;; -------------------------------------------------------------------------- ;;
+iniciando_mr_msg db     'Iniciando kernel (Modo Real)...'
+iniciando_mr_len equ    $ - iniciando_mr_msg
+
+iniciando_mp_msg db     'Iniciando kernel (Modo Protegido)...', 0
+iniciando_mp_len equ    $ - iniciando_mp_msg
+
+nombre_grupo     db     'Smelly Cat', 0
 
 ;;
 ;; Seccion de código.
@@ -62,7 +75,6 @@ start:
 
     ; Imprimir mensaje de bienvenida
     imprimir_texto_mr iniciando_mr_msg, iniciando_mr_len, 0x07, 0, 0
-
 
     ; Habilitar A20
     call habilitar_A20
@@ -91,20 +103,22 @@ BITS 32
     mov esp, 0x27000
     mov ebp, 0x27000
 
+    ; Prueba de segmentación: pintamos la esquina de la pantalla usando un
+    ; segmento exclusivo para video
     mov ax, SEG_VIDEO
     mov es, ax
-
-
     mov word [es:0x0], 0x0F41
 
-
-
     ; Imprimir mensaje de bienvenida
+    push word  0x07           ; attr
+    push dword 1              ; y
+    push dword 0              ; x
+    push iniciando_mp_msg     ; text
+    call print
+    add esp, PRINT_ARGS_SIZE
 
-    ; Inicializar el juego
-
-    ; Inicializar pantalla
-
+    ; Pintamos la pantalla (ejercicio 1d)
+    
     ; pintar de negro primer fila
     push dword 80      ; ancho
     push dword 1       ; alto
@@ -113,7 +127,7 @@ BITS 32
     push 00000000b     ; color
     push ' '           ; letra
     call screen_pintar_rect
-    add esp, 2 + 4 * 4
+    add esp, SCREEN_PINTAR_RECT_ARGS_SIZE
 
     ; pintar de gris:
     push dword 80      ; ancho
@@ -123,7 +137,7 @@ BITS 32
     push 01110111b     ; color
     push ' '           ; letra
     call screen_pintar_rect
-    add esp, 2 + 4 * 4
+    add esp, SCREEN_PINTAR_RECT_ARGS_SIZE
 
     ; pintar ultimas filas de negro
     push dword 80      ; ancho
@@ -133,7 +147,7 @@ BITS 32
     push 00000000b     ; color
     push ' '           ; letra
     call screen_pintar_rect
-    add esp, 2 + 4 * 4
+    add esp, SCREEN_PINTAR_RECT_ARGS_SIZE
 
     ; pintar de rojo y azul
     push dword 7       ; ancho
@@ -143,7 +157,7 @@ BITS 32
     push 01000100b     ; color (rojo)
     push ' '           ; letra
     call screen_pintar_rect
-    add esp, 2 + 4 * 4
+    add esp, SCREEN_PINTAR_RECT_ARGS_SIZE
 
     push dword 7       ; ancho
     push dword 5       ; alto
@@ -152,9 +166,15 @@ BITS 32
     push 00010001b     ; color (azul)
     push ' '           ; letra
     call screen_pintar_rect
-    add esp, 2 + 4 * 4
+    add esp, SCREEN_PINTAR_RECT_ARGS_SIZE
+
+    ; Inicializar el juego
+
+    ; Inicializar pantalla
+    call screen_inicializar
 
     ; Inicializar el manejador de memoria
+    call mmu_inicializar
 
     ; Inicializar el directorio de paginas
     call mmu_inicializar_dir_kernel
@@ -168,12 +188,12 @@ BITS 32
     mov cr0, eax
 
     ; Probamos que siga andando todo imprimiendo el nombre del grupo
-    push word  0x0F        ; attr
+    push word  0x07        ; attr
     push dword 0           ; y
     push dword 70          ; x
     push nombre_grupo      ; text
     call print
-    add esp, 2 + 3 * 4
+    add esp, PRINT_ARGS_SIZE
 
     ; Desmapeamos la ultima pagina del kernel
     mov eax, cr3
@@ -193,8 +213,6 @@ BITS 32
 
     ; Cargar IDT
     lidt [IDT_DESC]
-
-    int 3
 
     ; Configurar controlador de interrupciones
 

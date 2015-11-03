@@ -153,7 +153,7 @@ uchar screen_caracter_perro(uint tipo)
 
 void screen_pintar_reloj_perro(perro_t *perro)
 {
-	jugador_t *j = perro->jugador;
+    jugador_t *j = perro->jugador;
     uint columna = j->index == JUGADOR_A ? POSICION_RELOJES_C_A : POSICION_RELOJES_C_B;
 
     uchar col_libre = C_BG_BLACK | screen_color_jugador(j);
@@ -227,7 +227,7 @@ uchar screen_caracter_tesoro(int valor) {
         return 'o';
 }
 
-void screen_actualizar_posicion_mapa(uint x, uint y)
+void screen_actualizar_posicion_mapas(uint x, uint y)
 {
     uchar bg = C_BG_GREEN;
 

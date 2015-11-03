@@ -35,13 +35,14 @@ _isr%1:
 
     call screen_limpiar
 
-    push word  0x0F           ; attr
+    push word  0x07           ; attr
     push dword 0              ; y
     push dword 0              ; x
     push excepcion_msg        ; text
     call print
+    add esp, 2 + 3 * 4
 
-    push word  0x0F           ; attr
+    push word  0x07           ; attr
     push dword 0              ; y
     push dword excepcion_len  ; x
     push dword 2              ; size

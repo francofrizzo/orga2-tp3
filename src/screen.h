@@ -27,7 +27,6 @@ typedef struct ca_s {
     unsigned char a;
 } ca;
 
-
 struct perro_t;
 typedef struct perro_t perro_t;
 
@@ -44,7 +43,6 @@ void print(const char * text, unsigned int x, unsigned int y, unsigned short att
 
 // imprime un numero en hexa en pantalla
 void print_hex(unsigned int numero, int size, unsigned int x, unsigned int y, unsigned short attr);
-
 
 // pinta un rectangulo en pantalla
 void screen_pintar_rect(unsigned char c, unsigned char color, int fila, int columna, int alto, int ancho);
@@ -86,6 +84,5 @@ void screen_actualizar_posicion_mapa(uint x, uint y);
 void screen_stop_game_show_winner(jugador_t *j);
 
 void screen_limpiar();
-
 
 #endif  /* !__SCREEN_H__ */

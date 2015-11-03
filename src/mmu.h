@@ -16,8 +16,13 @@
 #define MAPA_BASE_FISICA  0x500000
 #define MAPA_BASE_VIRTUAL 0x800000
 
-void mmu_inicializar();
+#define AREA_LIBRE_BASE   0x100000
+#define AREA_LIBRE_LIM    0x3FFFFF
 
+// Variable global que registra la proxima pagina disponible en el area libre
+extern uint prox_pag_libre;
+
+void mmu_inicializar();
 
 // devuelve la proxima pagina libre del area libre del kernel
 uint mmu_proxima_pagina_fisica_libre();
