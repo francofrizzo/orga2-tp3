@@ -36,7 +36,7 @@ idt_descriptor IDT_DESC = {
 
 #define IDT_ENTRY(numero, dpl)                                                                                   \
     idt[numero].offset_0_15 = (unsigned short) ((unsigned int)(&_isr ## numero) & (unsigned int) 0xFFFF);        \
-    idt[numero].segsel = (unsigned short) SEG_COD_KERNEL;                                                                  \
+    idt[numero].segsel = (unsigned short) SEG_CODE_KERNEL;                                                       \
     idt[numero].attr = (unsigned short) 0x8E00 | (((unsigned short)(dpl & 0x3)) << 13);                          \
     idt[numero].offset_16_31 = (unsigned short) ((unsigned int)(&_isr ## numero) >> 16 & (unsigned int) 0xFFFF);
 

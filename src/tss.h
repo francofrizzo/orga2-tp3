@@ -13,7 +13,6 @@
 #include "gdt.h"
 #include "game.h"
 
-
 typedef struct str_tss {
     unsigned short  ptl;
     unsigned short  unused0;

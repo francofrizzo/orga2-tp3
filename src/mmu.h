@@ -11,13 +11,42 @@
 #include "defines.h"
 #include "game.h"
 
-#define CODIGO_BASE       0X401000
+#define SHARED_BASE       0x400000
+#define CODIGO_BASE       0x401000
+#define TASK_PILA_BASE    0x402000 - 12
 
 #define MAPA_BASE_FISICA  0x500000
 #define MAPA_BASE_VIRTUAL 0x800000
 
 #define AREA_LIBRE_BASE   0x100000
 #define AREA_LIBRE_LIM    0x3FFFFF
+
+
+/* Atributos paginas */
+/* -------------------------------------------------------------------------- */
+
+#define PAGE_ATTR_USER             0x4
+#define PAGE_ATTR_READ_WRITE       0x2
+#define PAGE_ATTR_PRESENT          0x1
+
+/* Direcciones fisicas de codigos */
+/* -------------------------------------------------------------------------- */
+/* En estas direcciones estan los códigos de todas las tareas. De aqui se
+ * copiaran al destino indicado por TASK_<i>_CODE_ADDR.
+ */
+
+#define TASK_A1_CODE_ADDR           0x10000
+#define TASK_A2_CODE_ADDR           0x11000
+#define TASK_B1_CODE_ADDR           0x12000
+#define TASK_B2_CODE_ADDR           0x13000
+#define TASK_IDLE_CODE_ADDR         0x16000
+
+/* Direcciones fisicas de directorios y tablas de paginas del KERNEL */
+/* -------------------------------------------------------------------------- */
+
+#define BASE_PD_KERNEL          0x27000
+#define BASE_PT_KERNEL(pag)     (0x28000 + (pag << 12))
+
 
 // Variable global que registra la proxima pagina disponible en el area libre
 extern uint prox_pag_libre;

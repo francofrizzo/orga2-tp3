@@ -10,33 +10,6 @@
 
 #include "screen.h"
 
-
-/* Atributos paginas */
-/* -------------------------------------------------------------------------- */
-
-#define PAGE_ATTR_USER             0x4
-#define PAGE_ATTR_READ_WRITE       0x2
-#define PAGE_ATTR_PRESENT          0x1
-
-/* Direcciones fisicas de codigos */
-/* -------------------------------------------------------------------------- */
-/* En estas direcciones estan los códigos de todas las tareas. De aqui se
- * copiaran al destino indicado por TASK_<i>_CODE_ADDR.
- */
-
-#define TASK_A1_CODE_ADDR           0x10000
-#define TASK_A2_CODE_ADDR           0x11000
-#define TASK_B1_CODE_ADDR           0x12000
-#define TASK_B2_CODE_ADDR           0x13000
-
-
-/* Direcciones fisicas de directorios y tablas de paginas del KERNEL */
-/* -------------------------------------------------------------------------- */
-
-#define BASE_PD_KERNEL          0x27000
-#define BASE_PT_KERNEL(pag)     (0x28000 + (pag << 12))
-
-
 /* Implementacion de funciones del manejador de memoria */
 /* -------------------------------------------------------------------------- */
 
@@ -47,7 +20,7 @@ void mmu_mapear_pagina (uint virtual, uint cr3, uint fisica, uint attrs) {
     uint* pd = (uint*) (cr3 & 0xFFFFF000);           // usamos la info de CR3 para encontrar el directorio
     uint* pt;
 
-    if ((pd[pd_index] & 1) == 0) {                     // si la tabla no esta presente, la creamos
+    if ((pd[pd_index] & 1) == 0) {                   // si la tabla no esta presente, la creamos
         uint nueva_pag;
         if ((uint) pd == BASE_PD_KERNEL) {
             nueva_pag = BASE_PT_KERNEL(pd_index);    // nueva tabla para kernel
@@ -55,6 +28,7 @@ void mmu_mapear_pagina (uint virtual, uint cr3, uint fisica, uint attrs) {
             nueva_pag = mmu_proxima_pagina_fisica_libre();  // nueva tabla para usuario
         }
         pt = (uint*) nueva_pag;
+        mmu_inicializar_pagina(pt);
         pd[pd_index] = nueva_pag | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;
     } else {
         pt = (uint*) (pd[pd_index] & 0xFFFFF000);    // buscamos a la tabla de paginas en el directorio
@@ -106,7 +80,7 @@ uint mmu_proxima_pagina_fisica_libre() {
 
 void mmu_inicializar_pagina(uint * pagina) {
     int i;
-    for (i = 0; i < PAGE_SIZE; i++) {
+    for (i = 0; i < 1024; i++) {
         pagina[i] = 0;
     }
 }
@@ -125,21 +99,22 @@ uint mmu_inicializar_memoria_perro(perro_t *perro, int index_jugador, int index_
     uint* pd = (uint*) mmu_proxima_pagina_fisica_libre();
     mmu_inicializar_pagina(pd);
 
-    uint* pt[6];
-    int i;
-    for (i = 0; i < 6; i++) {
-        pt[i] = (uint*) mmu_proxima_pagina_fisica_libre();
-        mmu_inicializar_pagina(pt[i]);
-    }
+    // uint* pt[6];
+    // int i;
+    // for (i = 0; i < 6; i++) {
+    //     pt[i] = (uint*) mmu_proxima_pagina_fisica_libre();
+    //     mmu_inicializar_pagina(pt[i]);
+    // }
     
-    pd[0] = ((uint) pt[0] & 0xFFFFF000) | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;
-    pd[1] = ((uint) pt[1] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;
-    pd[2] = ((uint) pt[2] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
-    pd[3] = ((uint) pt[3] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
-    pd[4] = ((uint) pt[4] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
-    pd[5] = ((uint) pt[5] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
+    // pd[0] = ((uint) pt[0] & 0xFFFFF000) | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;
+    // pd[1] = ((uint) pt[1] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;
+    // pd[2] = ((uint) pt[2] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
+    // pd[3] = ((uint) pt[3] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
+    // pd[4] = ((uint) pt[4] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
+    // pd[5] = ((uint) pt[5] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
 
     // Identity mapping
+    int i;
     for (i = 0; i < 1024; i++) {
         mmu_mapear_pagina(i << 12, (uint) pd, i << 12, PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT);
     }
@@ -153,15 +128,16 @@ uint mmu_inicializar_memoria_perro(perro_t *perro, int index_jugador, int index_
     }
 
     mmu_mapear_pagina(
-        0x400000,
+        SHARED_BASE,
         (uint) pd,
         shared_page,
         PAGE_ATTR_USER | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT
     );
 
+
     // Pagina para codigo y stack
     mmu_mapear_pagina(
-        0x401000,
+        CODIGO_BASE,
         (uint) pd,
         mmu_xy2fisica(perro->x, perro->y),
         PAGE_ATTR_USER | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT

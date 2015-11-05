@@ -28,10 +28,11 @@ typedef unsigned int   uint;
 #define BOOTSECTOR              0x00001000 /* direccion fisica de comienzo del bootsector (copiado) */
 #define KERNEL                  0x00001200 /* direccion fisica de comienzo del kernel */
 
+#define BASE_PILA_KERNEL        0x00027000
 
 /* Indices en la gdt */
 /* -------------------------------------------------------------------------- */
-#define GDT_COUNT 30
+#define GDT_COUNT 48
 
 #define GDT_IDX_NULL_DESC           0
 
@@ -41,8 +42,8 @@ typedef unsigned int   uint;
 
 /* Selectores de segmentos */
 /* -------------------------------------------------------------------------- */
-#define SEG_COD_KERNEL              0x40
-#define SEG_COD_USER                0x4B
+#define SEG_CODE_KERNEL              0x40
+#define SEG_CODE_USER                0x4B
 #define SEG_DATA_KERNEL             0x50
 #define SEG_DATA_USER               0x5B
 #define SEG_VIDEO                   0x60

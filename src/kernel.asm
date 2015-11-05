@@ -39,8 +39,9 @@ extern perro_prueba
 ;;
 ;; Defines
 ;; -------------------------------------------------------------------------- ;;
-SEG_COD_KERNEL   equ    0x40
-SEG_COD_USER     equ    0x4B
+BASE_PILA_KERNEL equ    0x27000
+SEG_CODE_KERNEL  equ    0x40
+SEG_CODE_USER    equ    0x4B
 SEG_DATA_KERNEL  equ    0x50
 SEG_DATA_USER    equ    0x5B
 SEG_VIDEO        equ    0x60
@@ -93,7 +94,7 @@ start:
     mov cr0, eax
 
     ; Saltar a modo protegido
-    jmp SEG_COD_KERNEL:modoprotegido
+    jmp SEG_CODE_KERNEL:modoprotegido
 
 BITS 32
 
@@ -105,8 +106,8 @@ BITS 32
     mov ss, ax
 
     ; Establecer la base de la pila
-    mov esp, 0x27000
-    mov ebp, 0x27000
+    mov esp, BASE_PILA_KERNEL
+    mov ebp, BASE_PILA_KERNEL
 
     ; Prueba de segmentación: pintamos la esquina de la pantalla usando un
     ; segmento exclusivo para video
