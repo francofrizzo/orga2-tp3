@@ -8,8 +8,6 @@
 #ifndef __PIC_H__
 #define __PIC_H__
 
-
-
 void resetear_pic(void);
 void habilitar_pic();
 void deshabilitar_pic();

@@ -22,6 +22,10 @@
 // Variable global que registra la proxima pagina disponible en el area libre
 extern uint prox_pag_libre;
 
+// Variables globales con las direcciones fisicas de las paginas compartidas de cada jugador
+extern uint shared_jugador_a;
+extern uint shared_jugador_b;
+
 void mmu_inicializar();
 
 // devuelve la proxima pagina libre del area libre del kernel
@@ -52,5 +56,6 @@ void mmu_mover_perro(perro_t *perro, int viejo_x, int viejo_y);
 void mmu_mapear_pagina  (uint virtual, uint cr3, uint fisica, uint attrs);
 uint mmu_unmapear_pagina(uint virtual, uint cr3);
 
+void perro_prueba();
 
 #endif	/* !__MMU_H__ */

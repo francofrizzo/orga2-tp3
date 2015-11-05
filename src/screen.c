@@ -227,7 +227,7 @@ uchar screen_caracter_tesoro(int valor) {
         return 'o';
 }
 
-void screen_actualizar_posicion_mapas(uint x, uint y)
+void screen_actualizar_posicion_mapa (uint x, uint y)
 {
     uchar bg = C_BG_GREEN;
 

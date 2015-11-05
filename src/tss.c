@@ -8,7 +8,6 @@
 #include "tss.h"
 #include "mmu.h"
 
-
 tss tss_inicial;
 tss tss_idle;
 
@@ -16,5 +15,5 @@ tss tss_jugadorA[MAX_CANT_PERROS_VIVOS];
 tss tss_jugadorB[MAX_CANT_PERROS_VIVOS];
 
 void tss_inicializar() {
-}
 
+}

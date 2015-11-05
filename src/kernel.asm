@@ -31,6 +31,9 @@ extern screen_pintar_rect
 SCREEN_PINTAR_RECT_ARGS_SIZE equ 2 + 4 * 4
 extern screen_inicializar
 
+;; perro_prueba
+extern perro_prueba
+
 ;;
 ;; Defines
 ;; -------------------------------------------------------------------------- ;;
@@ -201,6 +204,10 @@ BITS 32
     push dword 0x3FF000    ; virtual
     call mmu_unmapear_pagina
     add esp, 2 * 4
+
+    ; Ejercicio 4 c
+
+    call perro_prueba
 
     ; Inicializar tss
 
