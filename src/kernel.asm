@@ -202,11 +202,11 @@ BITS 32
     add esp, PRINT_ARGS_SIZE
 
     ; Desmapeamos la ultima pagina del kernel
-    mov eax, cr3
-    push eax               ; cr3
-    push dword 0x3FF000    ; virtual
-    call mmu_unmapear_pagina
-    add esp, 2 * 4
+    ; mov eax, cr3
+    ; push eax               ; cr3
+    ; push dword 0x3FF000    ; virtual
+    ; call mmu_unmapear_pagina
+    ; add esp, 2 * 4
 
     ; Ejercicio 4 c
 

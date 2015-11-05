@@ -29,14 +29,14 @@ void tss_inicializar() {
 
 }
 
-void completar_tss(tss* entrada_tss, uint cr3) {
+void completar_tss(tss* entrada_tss, perro_t* perro) {
 	entrada_tss->cs     = SEG_CODE_USER;
 	entrada_tss->ds     = SEG_DATA_USER;
 	entrada_tss->ss     = SEG_DATA_USER;
 	entrada_tss->eip    = CODIGO_BASE;     
 	entrada_tss->ebp    = TASK_PILA_BASE;
 	entrada_tss->esp    = TASK_PILA_BASE;
-	entrada_tss->cr3    = mmu_inicializar_dir_perro();
+	entrada_tss->cr3    = mmu_inicializar_memoria_perro(perro, perro->jugador->index, perro->index);
 	entrada_tss->eflags = 0x202;
 	entrada_tss->esp0   = mmu_proxima_pagina_fisica_libre();
 }
