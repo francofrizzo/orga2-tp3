@@ -45,6 +45,8 @@ SEG_CODE_USER    equ    0x4B
 SEG_DATA_KERNEL  equ    0x50
 SEG_DATA_USER    equ    0x5B
 SEG_VIDEO        equ    0x60
+TSS_INICIAL      equ    (20 << 3)
+TSS_IDLE         equ    (21 << 3)
 
 %define BREAKPOINT xchg bx, bx
 
@@ -225,16 +227,18 @@ BITS 32
     lidt [IDT_DESC]
 
     ; Configurar controlador de interrupciones
-
-    ; Cargar tarea inicial
-
-
-    ; Habilitar interrupciones
     call resetear_pic
     call habilitar_pic
+
+    ; Cargar tarea inicial
+    mov ax, TSS_INICIAL
+    ltr ax
+
+    ; Habilitar interrupciones
     sti
 
     ; Saltar a la primera tarea: Idle
+    jmp TSS_IDLE:0
 
     ; Ciclar infinitamente (por si algo sale mal...)
     mov eax, 0xFFFF
