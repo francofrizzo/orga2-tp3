@@ -56,4 +56,8 @@ typedef struct str_tss {
 
 void tss_inicializar();
 
+uint TSS_SIZE = sizeof(str_tss);
+extern TSS_SIZE ;
+
+
 #endif  /* !__TSS_H__ */
