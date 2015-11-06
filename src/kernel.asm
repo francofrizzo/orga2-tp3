@@ -215,7 +215,7 @@ BITS 32
 
     ; Ejercicio 4 c
 
-    call mmu_perro_prueba
+    ; call mmu_perro_prueba
 
     ; Inicializar tss
     ; Inicializar tss de la tarea Idle

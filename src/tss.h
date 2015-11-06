@@ -56,10 +56,10 @@ typedef struct str_tss {
 
 void tss_inicializar();
 void tss_inicializar_perro(tss* tss_perro, perro_t* perro);
-void tss_agregar_a_gdt(tss* tss_in, gdt_entry* gdt_in, int idx, int dpl);
+void tss_agregar_a_gdt(tss* tss_in, gdt_entry* gdt_in, int idx);
 void tss_perro_prueba();
 
-#define TSS_SIZE sizeof(tss)
+#define TSS_SIZE 0x67
 
 extern tss tss_inicial;
 extern tss tss_idle;

@@ -53,10 +53,11 @@ void tss_inicializar_perro(tss* tss_perro, perro_t* perro) {
 	tss_perro->cr3    = mmu_inicializar_memoria_perro(perro, perro->jugador->index, perro->index);
 	tss_perro->eflags = 0x202;
 	tss_perro->esp0   = mmu_proxima_pagina_fisica_libre();
+	tss_perro->ss0    = SEG_DATA_KERNEL;
 	tss_perro->iomap  = 0xFFFF;
 }
 
-void tss_agregar_a_gdt(tss* tss_in, gdt_entry* gdt_in, int idx, int dpl) {
+void tss_agregar_a_gdt(tss* tss_in, gdt_entry* gdt_in, int idx) {
 	if (0 < idx && idx < GDT_COUNT) {
 		gdt_in[idx] = (gdt_entry) {
 	        (unsigned short)     TSS_SIZE              & 0x0000FFFF, /* limit[0:15]  */
@@ -64,12 +65,12 @@ void tss_agregar_a_gdt(tss* tss_in, gdt_entry* gdt_in, int idx, int dpl) {
 	        (unsigned char)     ((uint) tss_in >> 16)  & 0x000000FF, /* base[23:16]  */
 	        (unsigned char)      GDT_TYPE_TSS,                       /* type         */
 	        (unsigned char)      0x00,                               /* s            */
-	        (unsigned char)      dpl,                                /* dpl          */
+	        (unsigned char)      GDT_DPL_KERNEL,                                /* dpl          */
 	        (unsigned char)      0x01,                               /* p            */
 	        (unsigned char)     (TSS_SIZE      >> 16)  & 0x0000000F, /* limit[16:19] */
-	        (unsigned char)      0x01,                               /* avl          */
+	        (unsigned char)      0x00,                               /* avl          */
 	        (unsigned char)      0x00,                               /* l            */
-	        (unsigned char)      0x00,                               /* db           */
+	        (unsigned char)      0x01,                               /* db           */
 	        (unsigned char)      0x00,                               /* g            */
 	        (unsigned char)     ((uint) tss_in >> 24)  & 0x000000FF  /* base[31:24]  */
 	    };
@@ -85,5 +86,5 @@ void tss_perro_prueba() {
 
     tss_inicializar_perro(&tss_prueba, &tomi);
 
-    tss_agregar_a_gdt(&tss_prueba, (gdt_entry*) &gdt, 22, GDT_DPL_KERNEL);
+    tss_agregar_a_gdt(&tss_prueba, (gdt_entry*) &gdt, 22);
 }
