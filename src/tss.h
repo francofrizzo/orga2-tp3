@@ -55,9 +55,16 @@ typedef struct str_tss {
 } __attribute__((__packed__, aligned (8))) tss;
 
 void tss_inicializar();
+void tss_inicializar_perro(tss* tss_perro, perro_t* perro);
+void tss_agregar_a_gdt(tss* tss_in, gdt_entry* gdt_in, int idx, int dpl);
+void tss_perro_prueba();
 
-uint TSS_SIZE = sizeof(str_tss);
-extern TSS_SIZE ;
+#define TSS_SIZE sizeof(tss)
 
+extern tss tss_inicial;
+extern tss tss_idle;
+
+extern tss tss_jugadorA[MAX_CANT_PERROS_VIVOS];
+extern tss tss_jugadorB[MAX_CANT_PERROS_VIVOS];
 
 #endif  /* !__TSS_H__ */

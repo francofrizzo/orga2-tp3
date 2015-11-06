@@ -30,8 +30,14 @@ typedef unsigned int   uint;
 
 #define BASE_PILA_KERNEL        0x00027000
 
-#define GDT_DPL_KERNEL          0
-#define GDT_DPL_USER            3
+/* Atributos de descriptores en la gdt */
+/* -------------------------------------------------------------------------- */
+
+#define GDT_TYPE_CODE           0xA
+#define GDT_TYPE_DATA           0x2
+#define GDT_TYPE_TSS            0x9
+#define GDT_DPL_KERNEL          0x0
+#define GDT_DPL_USER            0x3
 
 /* Indices en la gdt */
 /* -------------------------------------------------------------------------- */

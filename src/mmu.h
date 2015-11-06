@@ -85,6 +85,6 @@ void mmu_mover_perro(perro_t *perro, int viejo_x, int viejo_y);
 void mmu_mapear_pagina  (uint virtual, uint cr3, uint fisica, uint attrs);
 uint mmu_unmapear_pagina(uint virtual, uint cr3);
 
-void perro_prueba();
+void mmu_perro_prueba();
 
 #endif	/* !__MMU_H__ */

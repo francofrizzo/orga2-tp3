@@ -25,6 +25,11 @@ extern CR3_KERNEL
 extern mmu_inicializar_dir_kernel
 extern mmu_unmapear_pagina
 extern mmu_inicializar
+extern mmu_perro_prueba
+
+;; TSS
+extern tss_inicializar
+extern tss_perro_prueba
 
 ;; Pantalla
 extern print
@@ -33,8 +38,6 @@ extern screen_pintar_rect
 SCREEN_PINTAR_RECT_ARGS_SIZE equ 2 + 4 * 4
 extern screen_inicializar
 
-;; perro_prueba
-extern perro_prueba
 
 ;;
 ;; Defines
@@ -212,11 +215,11 @@ BITS 32
 
     ; Ejercicio 4 c
 
-    call perro_prueba
+    call mmu_perro_prueba
 
     ; Inicializar tss
-
     ; Inicializar tss de la tarea Idle
+    call tss_inicializar
 
     ; Inicializar el scheduler
 
@@ -238,6 +241,9 @@ BITS 32
     sti
 
     ; Saltar a la primera tarea: Idle
+    call tss_perro_prueba
+    BREAKPOINT
+    jmp (22 << 3):0
     jmp TSS_IDLE:0
 
     ; Ciclar infinitamente (por si algo sale mal...)

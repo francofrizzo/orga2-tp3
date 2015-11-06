@@ -100,21 +100,7 @@ void mmu_copiar_pagina(uint src, uint dst) {
 uint mmu_inicializar_memoria_perro(perro_t *perro, int index_jugador, int index_tipo) {
     uint* pd = (uint*) mmu_proxima_pagina_fisica_libre();
     mmu_inicializar_pagina(pd);
-/*
-    uint* pt[6];
-    int i;
-    for (i = 0; i < 6; i++) {
-        pt[i] = (uint*) mmu_proxima_pagina_fisica_libre();
-        mmu_inicializar_pagina(pt[i]);
-    }
-    
-    pd[0] = ((uint) pt[0] & 0xFFFFF000) | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;
-    pd[1] = ((uint) pt[1] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;
-    pd[2] = ((uint) pt[2] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
-    pd[3] = ((uint) pt[3] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
-    pd[4] = ((uint) pt[4] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
-    pd[5] = ((uint) pt[5] & 0xFFFFF000) | PAGE_ATTR_USER | PAGE_ATTR_PRESENT;
-*/
+
     // Identity mapping
     int i;
     for (i = 0; i < 1024; i++) {
@@ -195,7 +181,7 @@ uint mmu_xy2virtual(uint x, uint y) {
     return MAPA_BASE_VIRTUAL + (y * PAGE_SIZE * MAPA_ANCHO) + (x * PAGE_SIZE);
 }
 
-void perro_prueba() {
+void mmu_perro_prueba() {
     perro_t winnie;
     winnie.x = 25;
     winnie.y = 15;

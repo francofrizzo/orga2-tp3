@@ -30,22 +30,20 @@ uint game_syscall_manejar(uint syscall, uint param1)
 {
     uint res = 0;
     switch (syscall) {
-        case SYSCALL_MOVERSE: {
-            game_perro_mover(perro, (direccion) dir);
+        case SYSCALL_MOVERSE:
+            game_perro_mover(game_perro_actual, (direccion) param1);
             break;
-        }
-        case SYSCALL_CAVAR: {
-            game_perro_cavar(perro);
+        case SYSCALL_CAVAR:
+            game_perro_cavar(game_perro_actual);
             break;
-        }
-        case SYSCALL_OLFATEAR: {
-            game_perro_olfatear(perro);
+        case SYSCALL_OLFATEAR:
+            game_perro_olfatear(game_perro_actual);
             break;
-        }
-        case SYSCALL_RECIBIR_ORDEN: {
+        case SYSCALL_RECIBIR_ORDEN:
+            res = param1 << 16 | (game_perro_actual->jugador->y) << 8 | (game_perro_actual->jugador->x);
             break;
-        }
-        default: break;
+        default:
+            break;
     }
     return res;
 }
