@@ -17,18 +17,16 @@ void actualizar(int *x, int *y, int direccion);
 
 void task(int x_origen, int y_origen) {
     /* Tarea */
- 
 
 	int x_actual = x_origen;
 	int y_actual = y_origen;
 
-	//breakpoint();
-
 	while (TRUE)
 	{
 		int direccion = syscall_olfatear();
-		if (direccion == AQUI)
+		if (direccion == AQUI) {
 			break;
+		}
 		
 		actualizar(&x_actual, &y_actual, direccion);
 		syscall_moverse(direccion);
@@ -36,7 +34,6 @@ void task(int x_origen, int y_origen) {
 	while (syscall_cavar() != 0)
 	{}
 	
-
 	ir_hacia_desde(x_origen, y_origen, x_actual, y_actual);
 
     while(1) { __asm __volatile("mov $2, %%eax":::"eax"); }

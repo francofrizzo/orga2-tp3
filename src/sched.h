@@ -9,6 +9,7 @@
 #define __SCHED_H__
 
 #include "game.h"
+#include "screen.h"
 
 #define MAX_CANT_TAREAS_VIVAS   (MAX_CANT_PERROS_VIVOS * 2)
 
@@ -31,6 +32,9 @@ typedef struct sched_t
 {
     sched_task_t tasks[MAX_CANT_TAREAS_VIVAS+1];
     ushort current;
+    ushort proximo_jugador;
+    ushort last_jugadorA;
+    ushort last_jugadorB;
 } sched_t;
 
 extern sched_t scheduler;

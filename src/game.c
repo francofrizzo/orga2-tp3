@@ -45,6 +45,20 @@ uint game_es_posicion_valida(int x, int y) {
 	return (x >= 0 && y >= 0 && x < MAPA_ANCHO && y < MAPA_ALTO);
 }
 
+// transforma código de dirección en valores x e y 
+uint game_dir2xy(/* in */ direccion dir, /* out */ int *x, /* out */ int *y)
+{
+	switch (dir)
+	{
+		case IZQ: *x = -1; *y =  0; break;
+		case DER: *x =  1; *y =  0; break;
+		case ABA: *x =  0; *y =  1; break;
+		case ARR: *x =  0; *y = -1; break;
+    	default: return -1;
+	}
+
+	return 0;
+}
 
 void game_inicializar()
 {
@@ -54,8 +68,7 @@ void game_inicializar()
     screen_pintar_puntajes();
 }
 
-
-// devuelve la cantidad de huesos que hay en la posición pasada como parametro
+// devuelve la cantidad de huesos que hay en la posicion pasada como parametro
 uint game_huesos_en_posicion(uint x, uint y)
 {
 	int i;
@@ -67,8 +80,16 @@ uint game_huesos_en_posicion(uint x, uint y)
 	return 0;
 }
 
-
-
+// disminuye en uno la cantiddad de huesos en la posicion pasada como parametro
+void game_dec_huesos(uint x, uint y)
+{
+	int i;
+	for (i = 0; i < ESCONDITES_CANTIDAD; i++)
+	{
+		if (escondites[i][0] == x && escondites[i][1] == y && escondites[i][2] > 0)
+			escondites[i][2]--;
+	}
+}
 
 // devuelve algun perro que esté en la posicion pasada (hay max 2, uno por jugador)
 perro_t* game_perro_en_posicion(uint x, uint y)
@@ -84,14 +105,19 @@ perro_t* game_perro_en_posicion(uint x, uint y)
 	return NULL;
 }
 
-
-
 // termina si se agotaron los huesos o si hace tiempo que no hay ningun cambio
 void game_terminar_si_es_hora()
 {
 }
 
-
-
-
-
+// se fija si la posicion dada contiene algun perro del jugador pasado por parametro
+uint game_hay_perros_de(uint x, uint y, jugador_t* jugador) {
+	uint hay_perros = FALSE;
+	uint i;
+	for (i = 0; i < MAX_CANT_PERROS_VIVOS; i++) {
+		if (!jugador->perros[i].libre && jugador->perros[i].x == x && jugador->perros[i].y == y) {
+			hay_perros = TRUE;
+		}
+	}
+	return hay_perros;
+}

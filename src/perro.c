@@ -8,13 +8,10 @@
 // realiza inicialización básica de un perro. El perro aun no está vivo ni por lanzarse. Setea jugador, indice, etc
 void game_perro_inicializar(perro_t *perro, jugador_t *j, uint index, uint id)
 {
-	perro->id   = id;
-    perro->index = index;
+	perro->id      = id;
+    perro->index   = index;
     perro->jugador = j;
-	perro->libre = TRUE;
-
-//	~~~ completar si es necesario ~~~
-
+	perro->libre   = TRUE;
 }
 
 // toma un perro ya existente libre y lo recicla seteando x e y a la cucha.
@@ -23,61 +20,86 @@ void game_perro_reciclar_y_lanzar(perro_t *perro, uint tipo)
 {
 	jugador_t *j = perro->jugador;
 
-	perro->x = j->x_cucha;
-	perro->y = j->y_cucha;
-	perro->tipo = tipo;
-	perro->libre = FALSE;
+	perro->x            = j->x_cucha;
+	perro->y            = j->y_cucha;
+	perro->tipo         = tipo;
+	perro->libre        = FALSE;
+    perro->huesos       = 0;
+    perro->indice_reloj = 0;
 
 	// ahora debo llamar a rutinas que inicialicen un nuevo mapa de
 	// memoria para el nuevo perro, que carguen su tss correspondiente,
 	// lo scheduleen y finalmente lo pinten en pantalla
 
-	// ~~~ completar ~~~
+    tss* tss_jugador = j->index == JUGADOR_A ? tss_jugadorA : tss_jugadorB;
 
+    tss_inicializar_perro(&tss_jugador[perro->index], perro);
+    tss_agregar_a_gdt(&tss_jugador[perro->index], GDT_IDX_TSS_PERRO(j->index, perro->index));
+    sched_agregar_tarea(perro);
+    screen_pintar_perro(perro);
 }
 
 // el perro descargó sus huesos o realizó una acción no válida y caputó, hay que sacarlo del sistema.
 void game_perro_termino(perro_t *perro)
 {
-//	~~~ completar ~~~
-}
-
-// transforma código de dirección en valores x e y 
-uint game_dir2xy(/* in */ direccion dir, /* out */ int *x, /* out */ int *y)
-{
-	switch (dir)
-	{
-		case IZQ: *x = -1; *y =  0; break;
-		case DER: *x =  1; *y =  0; break;
-		case ABA: *x =  0; *y =  1; break;
-		case ARR: *x =  0; *y = -1; break;
-    	default: return -1;
-	}
-
-	return 0;
+    if (perro != NULL) {
+        perro->libre = TRUE;
+        screen_borrar_perro(perro);
+        screen_actualizar_reloj_perro(perro);
+        sched_remover_tarea(TSS_PERRO(perro->jugador->index, perro->index));
+    }
 }
 
 // recibe una direccion y un perro, al cual debe mover en esa dirección
 // *** viene del syscall mover ***
 uint game_perro_mover(perro_t *perro, direccion dir)
 {
-	int x, y;
-	uint res = game_dir2xy(dir, &x, &y);
-	int nuevo_x = perro->x + x;
-	int nuevo_y = perro->y + y;
+    int x, y;
+    /* DEBUG
+        printf("dir vale %i \n", dir);
+    FIN DEBUG */
+    uint res = game_dir2xy(dir, &x, &y);
+    int nuevo_x = perro->x + x;
+    int nuevo_y = perro->y + y;
     int viejo_x = perro->x;
     int viejo_y = perro->y;
+    /* DEBUG
+        printf("Moverse en dir %i - trad ret %i - desp %i,%i - nueva pos %i,%i\n", dir, res, x, y, nuevo_x, nuevo_y);
+    FIN DEBUG */
 
-    // ~~~ completar ~~~
-    return nuevo_x + nuevo_y + viejo_x + viejo_y + res; // uso todas las variables para que no tire warning->error.
+    if (res == 0 &&
+        game_es_posicion_valida(nuevo_x, nuevo_y) &&
+        ! game_hay_perros_de(nuevo_x, nuevo_y, perro->jugador)
+    ) {
+        screen_borrar_perro(perro);
+        perro->x = nuevo_x;
+        perro->y = nuevo_y;
+        mmu_mover_perro(perro, viejo_x, viejo_y);
+        screen_pintar_perro(perro);
+        res = 0;
+    } else {
+        /* DEBUG */
+            if (res != 0) printf("Movimiento fallido por direccion invalida");
+            if (! game_es_posicion_valida(nuevo_x, nuevo_y)) printf("Movimiento fallido por posicion invalida");
+            if (game_hay_perros_de(nuevo_x, nuevo_y, perro->jugador)) printf("Movimiento fallido por perro ocupando lugar");
+        /* FIN DEBUG */
+    	res = -1;
+    }
+
+    return res;
 }
 
 // recibe un perro, el cual debe cavar en su posición
 // *** viene del syscall cavar ***
 uint game_perro_cavar(perro_t *perro)
 {
-	// ~~~ completar ~~~
-	return 0;
+	if (perro->huesos < 10 && game_huesos_en_posicion(perro->x, perro->y) > 0) {
+		perro->huesos++;
+		game_dec_huesos(perro->x, perro->y);
+	} else {
+		return 0;
+	}
+	return 1;
 }
 
 // recibe un perro, devueve la dirección del hueso más cercano
@@ -85,7 +107,6 @@ uint game_perro_cavar(perro_t *perro)
 uint game_perro_olfatear(perro_t *perro)
 {
 	int x_actual_diff = 1000, y_actual_diff = 1000;
-
 
 	int i;
 	for (i = 0; i < ESCONDITES_CANTIDAD; i++)
@@ -102,21 +123,18 @@ uint game_perro_olfatear(perro_t *perro)
 		}
    	}
 
-	if (x_actual_diff == 0 && y_actual_diff == 0)
+	if (x_actual_diff == 0 && y_actual_diff == 0) {
 		return AQUI;
+    }
 
-	if (x_actual_diff * x_actual_diff > y_actual_diff * y_actual_diff)
-	{
+	if (x_actual_diff * x_actual_diff > y_actual_diff * y_actual_diff) {
 		return x_actual_diff > 0 ? DER : IZQ;
-	}
-	else 
-	{
-		return y_actual_diff > 0 ? ABA : ARR;
-	}
+	} else {
+        return y_actual_diff > 0 ? ABA : ARR;
+    }
 
     return 0;
 }
-
 
 // chequea si el perro está en la cucha y suma punto al jugador o lo manda a dormir
 void game_perro_ver_si_en_cucha(perro_t *perro)
@@ -132,4 +150,3 @@ void game_perro_ver_si_en_cucha(perro_t *perro)
 	if (perro->huesos == 0)
 		game_perro_termino(perro);
 }
-

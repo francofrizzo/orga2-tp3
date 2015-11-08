@@ -33,7 +33,7 @@ typedef struct perro_t perro_t;
 struct jugador_t;
 typedef struct jugador_t jugador_t;
 
-int ee_printf(const char *fmt, ...);
+int printf(const char *fmt, ...);
 
 // pinta un "pixel" de la pantalla
 void screen_pintar(unsigned char c, unsigned char color, uint fila, uint columna);
@@ -43,6 +43,9 @@ void print(const char * text, unsigned int x, unsigned int y, unsigned short att
 
 // imprime un numero en hexa en pantalla
 void print_hex(unsigned int numero, int size, unsigned int x, unsigned int y, unsigned short attr);
+
+// imprime un numero decimal en pantalla
+void print_dec(unsigned int numero, int size, unsigned int x, unsigned int y, unsigned short attr);
 
 // pinta un rectangulo en pantalla
 void screen_pintar_rect(unsigned char c, unsigned char color, int fila, int columna, int alto, int ancho);
@@ -82,6 +85,7 @@ void screen_pintar_relojes();
 
 void screen_actualizar_posicion_mapa(uint x, uint y);
 void screen_stop_game_show_winner(jugador_t *j);
+void screen_show_debug_info();
 
 void screen_limpiar();
 

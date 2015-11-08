@@ -6,6 +6,7 @@
 
 #include "game.h"
 #include "syscall.h"
+#include "i386.h"
 
 // ejemplo de uso de memoria compartida para la guerra de tareas:
 // parte (1)

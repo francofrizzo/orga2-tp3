@@ -38,6 +38,11 @@ extern screen_pintar_rect
 SCREEN_PINTAR_RECT_ARGS_SIZE equ 2 + 4 * 4
 extern screen_inicializar
 
+;; Juego
+extern game_inicializar
+
+;; Scheduler
+extern sched_inicializar
 
 ;;
 ;; Defines
@@ -180,6 +185,7 @@ BITS 32
     add esp, SCREEN_PINTAR_RECT_ARGS_SIZE
 
     ; Inicializar el juego
+    call game_inicializar
 
     ; Inicializar pantalla
     call screen_inicializar
@@ -214,14 +220,14 @@ BITS 32
     ; add esp, 2 * 4
 
     ; Ejercicio 4 c
-
-    ; call mmu_perro_prueba
+        ; call mmu_perro_prueba
 
     ; Inicializar tss
     ; Inicializar tss de la tarea Idle
     call tss_inicializar
 
     ; Inicializar el scheduler
+    call sched_inicializar
 
     ; Inicializar la IDT
     call idt_inicializar
@@ -240,10 +246,11 @@ BITS 32
     ; Habilitar interrupciones
     sti
 
+    ; Ejercicio 6 h
+        ; call tss_perro_prueba
+        ; jmp (22 << 3):0
+    
     ; Saltar a la primera tarea: Idle
-    call tss_perro_prueba
-    BREAKPOINT
-    jmp (22 << 3):0
     jmp TSS_IDLE:0
 
     ; Ciclar infinitamente (por si algo sale mal...)

@@ -17,7 +17,6 @@
 #define SYSCALL_OLFATEAR          0x3
 #define SYSCALL_RECIBIR_ORDEN     0x4
 
-
 // gasta un rato en un ciclo infinito, util para hacer pausas y debuguear
 void wait(int pseudosecs)
 {
@@ -25,25 +24,32 @@ void wait(int pseudosecs)
     for (count = 0; count < pseudosecs * 1000000; count++) {}
 }
 
-
 uint game_syscall_manejar(uint syscall, uint param1)
 {
     uint res = 0;
     switch (syscall) {
-        case SYSCALL_MOVERSE:
-            game_perro_mover(game_perro_actual, (direccion) param1);
+        case SYSCALL_MOVERSE: {
+            res = game_perro_mover(game_perro_actual, param1);
             break;
-        case SYSCALL_CAVAR:
-            game_perro_cavar(game_perro_actual);
+        }
+        case SYSCALL_CAVAR: {
+            res = game_perro_cavar(game_perro_actual);
             break;
-        case SYSCALL_OLFATEAR:
-            game_perro_olfatear(game_perro_actual);
+        }
+        case SYSCALL_OLFATEAR: {
+            res = game_perro_olfatear(game_perro_actual);
             break;
-        case SYSCALL_RECIBIR_ORDEN:
-            res = param1 << 16 | (game_perro_actual->jugador->y) << 8 | (game_perro_actual->jugador->x);
+        }
+        case SYSCALL_RECIBIR_ORDEN: {
+            res = (game_perro_actual->jugador->ultima_orden) << 16 |
+                (game_perro_actual->jugador->y) << 8 |
+                (game_perro_actual->jugador->x);
             break;
-        default:
+        }
+        default: {
+            res = -1;
             break;
+        }
     }
     return res;
 }
@@ -52,8 +58,12 @@ uint game_syscall_manejar(uint syscall, uint param1)
 // ~~~ recibe el perro que está corriendo actualmente
 void game_atender_tick(perro_t *perro) {
     screen_actualizar_reloj_global();
+    if (perro != NULL) {
+        game_perro_ver_si_en_cucha(perro);
+        screen_actualizar_reloj_perro(perro);
+    }
+    // screen_show_debug_info();
 }
-
 
 #define KB_w        0x11 // 0x91
 #define KB_s        0x1f // 0x9f
@@ -64,7 +74,6 @@ void game_atender_tick(perro_t *perro) {
 #define KB_k        0x25 // 0xa5
 #define KB_j        0x24 // 0xa4
 #define KB_l        0x26 // 0xa6
-
 
 #define KB_q        0x10 // 0x90
 #define KB_e        0x12 // 0x92
@@ -83,19 +92,17 @@ void game_atender_tick(perro_t *perro) {
 #define KB_shiftL   0x2a // 0xaa
 #define KB_shiftR   0x36 // 0xb6
 
-
 // ~~~ debe atender la interrupción de teclado, se le pasa la tecla presionada
 void game_atender_teclado(unsigned char tecla)
 {
+    /* // Imprime en pantalla la tecla pulsada
     char tecla_ascii = 0;
 
-    switch (tecla)
-    {
-        // Lanzar perros
-        case KB_q: tecla_ascii = 'q'; break; // jugador 1, tipo 1
-        case KB_e: tecla_ascii = 'e'; break; // jugador 1, tipo 2
-        case KB_u: tecla_ascii = 'u'; break; // jugador 2, tipo 1
-        case KB_o: tecla_ascii = 'o'; break; // jugador 2, tipo 2
+    switch (tecla) {
+        case KB_q: tecla_ascii = 'q'; break;
+        case KB_e: tecla_ascii = 'e'; break;
+        case KB_u: tecla_ascii = 'u'; break;
+        case KB_o: tecla_ascii = 'o'; break;
 
         case KB_a: tecla_ascii = 'a'; break;
         case KB_d: tecla_ascii = 'd'; break;
@@ -120,14 +127,14 @@ void game_atender_teclado(unsigned char tecla)
     if (tecla_ascii != 0) {
         screen_pintar(tecla_ascii, C_FG_LIGHT_GREY | C_BG_BLACK, 0, VIDEO_COLS - 12);
     }
+    */
 
-    switch (tecla)
-    {
+    switch (tecla) {
         // Lanzar perros
-        case KB_q: game_jugador_lanzar_perro(&jugadorA, TIPO_1, 0, 0); break; // jugador A, tipo 1
-        case KB_e: game_jugador_lanzar_perro(&jugadorA, TIPO_2, 0, 0); break; // jugador A, tipo 2
-        case KB_u: game_jugador_lanzar_perro(&jugadorB, TIPO_1, 0, 0); break; // jugador B, tipo 1
-        case KB_o: game_jugador_lanzar_perro(&jugadorB, TIPO_2, 0, 0); break; // jugador B, tipo 2
+        case KB_q: game_jugador_lanzar_perro(&jugadorA, TIPO_1, jugadorA.x_cucha, jugadorA.y_cucha); break; // jugador A, tipo 1
+        case KB_e: game_jugador_lanzar_perro(&jugadorA, TIPO_2, jugadorA.x_cucha, jugadorA.y_cucha); break; // jugador A, tipo 2
+        case KB_u: game_jugador_lanzar_perro(&jugadorB, TIPO_1, jugadorB.x_cucha, jugadorB.y_cucha); break; // jugador B, tipo 1
+        case KB_o: game_jugador_lanzar_perro(&jugadorB, TIPO_2, jugadorB.x_cucha, jugadorB.y_cucha); break; // jugador B, tipo 2
 
         // Moverse (jugador A)
         case KB_a: game_jugador_moverse(&jugadorA, -1, 0); break; // izquierda
@@ -153,4 +160,3 @@ void game_atender_teclado(unsigned char tecla)
         default: break;
     }
 }
-

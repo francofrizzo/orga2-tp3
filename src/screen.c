@@ -238,12 +238,10 @@ void screen_actualizar_posicion_mapa(uint x, uint y)
         letra = screen_caracter_perro(perro->tipo);
     } else if (valor > 0) {
         letra = screen_caracter_tesoro(valor);
-    } else if ((jugadorA.x_cucha == x && jugadorA.y_cucha == y) || (jugadorB.x_cucha == x && jugadorB.y_cucha == y))
-    {
+    } else if ((jugadorA.x_cucha == x && jugadorA.y_cucha == y) ||
+        (jugadorB.x_cucha == x && jugadorB.y_cucha == y)) {
         letra = 'x';
-    }
-    else
-    {
+    } else {
         letra = screen_valor_actual(y+1, x);
     }
 
@@ -286,3 +284,34 @@ void screen_limpiar()
     screen_pintar_rect(' ', 0, 0, 0, VIDEO_FILS, VIDEO_COLS);
 }
 
+void screen_show_debug_info() {
+    int offy = 8; //(50/2 - 11);
+    int offx = 25; //(80/2 - 20);
+
+    int ancho = 30;
+    int alto = 34;
+
+    screen_pintar_rect(' ', C_BG_LIGHT_GREY, offy, offx, alto, ancho);
+    screen_pintar_linea_h(' ', C_BG_RED, offy + 1, offx, ancho);
+    screen_pintar_linea_v(' ', C_BG_BLACK, offy, offx, alto);
+    screen_pintar_linea_v(' ', C_BG_BLACK, offy, offx + ancho - 1, alto);
+    screen_pintar_linea_h(' ', C_BG_BLACK, offy, offx, ancho);
+    screen_pintar_linea_h(' ', C_BG_BLACK, offy + alto - 1, offx, ancho);
+
+    // offy++; offx++; alto -= 2; ancho-=2;
+
+    // screen_pintar_rect('*', C_BW, offy, offx, alto, ancho);
+
+    // offy++; offx++; alto -= 2; ancho-=2;
+
+    // screen_pintar_rect(' ', C_BG_LIGHT_GREY | C_FG_BLACK, offy, offx, alto, ancho);
+
+    // print("EL GANADOR ES EL JUGADOR",   offx+5  , offy+3 , C_BG_LIGHT_GREY | C_FG_BLACK);
+
+    // if(j == NULL)      print("EMPATE", offx+14, offy+6, C_MAKE_BG(color) | C_FG_BLACK);
+    // if(j == &jugadorA) print("<-- A",  offx+15, offy+6, C_BG_LIGHT_GREY  | color);
+    // if(j == &jugadorB) print("B -->",  offx+15, offy+6, C_BG_LIGHT_GREY  | color);
+    // // a partir de aca se termina el unviverso (STOP GAME)
+    // __asm __volatile( "cli\n" : : : );
+    // while(1){}  
+}

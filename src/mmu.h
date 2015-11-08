@@ -35,11 +35,8 @@
  * copiaran al destino indicado por TASK_<i>_CODE_ADDR.
  */
 
-#define TASK_A1_CODE_ADDR           0x10000
-#define TASK_A2_CODE_ADDR           0x11000
-#define TASK_B1_CODE_ADDR           0x12000
-#define TASK_B2_CODE_ADDR           0x13000
 #define TASK_IDLE_CODE_ADDR         0x16000
+#define TASK_PERRO_CODE_ADDR(j, t)  (0x10000 + (2 * j + t) * 0x1000)
 
 /* Direcciones fisicas de directorios y tablas de paginas del KERNEL */
 /* -------------------------------------------------------------------------- */
@@ -63,7 +60,7 @@ uint mmu_proxima_pagina_fisica_libre();
 // setea en cero todos los bytes
 void mmu_inicializar_pagina(uint * pagina);
 
-// copia los bytes
+// copia los bytes (recibe direcciones virtuales)
 void mmu_copiar_pagina    (uint src, uint dst);
 
 // pide una pagina para usar de directorio. Luego inicializa las entradas que iran con identity mapping.
@@ -80,7 +77,6 @@ uint mmu_inicializar_memoria_perro(perro_t *perro, int index_jugador, int index_
 
 // debe remapear y copiar el codigo
 void mmu_mover_perro(perro_t *perro, int viejo_x, int viejo_y);
-
 
 void mmu_mapear_pagina  (uint virtual, uint cr3, uint fisica, uint attrs);
 uint mmu_unmapear_pagina(uint virtual, uint cr3);

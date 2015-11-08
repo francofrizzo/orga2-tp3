@@ -13,6 +13,8 @@
 #include "gdt.h"
 #include "game.h"
 
+#define TSS_SIZE 0x67
+
 typedef struct str_tss {
     unsigned short  ptl;
     unsigned short  unused0;
@@ -56,10 +58,8 @@ typedef struct str_tss {
 
 void tss_inicializar();
 void tss_inicializar_perro(tss* tss_perro, perro_t* perro);
-void tss_agregar_a_gdt(tss* tss_in, gdt_entry* gdt_in, int idx);
+void tss_agregar_a_gdt(tss* tss_in, int index);
 void tss_perro_prueba();
-
-#define TSS_SIZE 0x67
 
 extern tss tss_inicial;
 extern tss tss_idle;

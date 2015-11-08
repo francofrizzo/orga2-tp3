@@ -8,13 +8,15 @@
 #ifndef __SYSCALL_H__
 #define __SYSCALL_H__
 
+#include "game.h"
+
 #define LS_INLINE static __inline __attribute__((always_inline))
 
 /*
  * Syscalls
  */
 
-LS_INLINE unsigned int syscall_moverse(direccion d) {
+LS_INLINE unsigned int syscall_moverse(unsigned int d) {
     int ret;
 
     __asm __volatile(

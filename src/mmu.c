@@ -29,7 +29,7 @@ void mmu_mapear_pagina (uint virtual, uint cr3, uint fisica, uint attrs) {
         }
         pt = (uint*) nueva_pag;
         mmu_inicializar_pagina(pt);
-        pd[pd_index] = nueva_pag | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;
+        pd[pd_index] = nueva_pag | PAGE_ATTR_USER | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;
     } else {
         pt = (uint*) (pd[pd_index] & 0xFFFFF000);    // buscamos a la tabla de paginas en el directorio
     }
@@ -122,7 +122,6 @@ uint mmu_inicializar_memoria_perro(perro_t *perro, int index_jugador, int index_
         PAGE_ATTR_USER | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT
     );
 
-
     // Pagina para codigo y stack
     mmu_mapear_pagina(
         CODIGO_BASE,
@@ -140,37 +139,53 @@ uint mmu_inicializar_memoria_perro(perro_t *perro, int index_jugador, int index_
     );
 
     // Copiamos el codigo del perro a su ubicacion en el mapa
-    uint code_addr;
-    switch (index_jugador) {
-        case JUGADOR_A: {
-            switch (index_tipo) {
-                case TIPO_1: code_addr = TASK_A1_CODE_ADDR; break;
-                case TIPO_2: code_addr = TASK_A2_CODE_ADDR; break;
-                default: break;
-            }
-        }
-        case JUGADOR_B: {
-            switch (index_tipo) {
-                case TIPO_1: code_addr = TASK_B1_CODE_ADDR; break;
-                case TIPO_2: code_addr = TASK_B2_CODE_ADDR; break;
-                default: break;
-            }
-        }
-        break;
-    }
-
-    mmu_mapear_pagina(                        // Mapeamos temporalmente la direccion
-        0x402000,                             // de la cucha en la direccion 0x402000
-        rcr3(),                               // para poder copiar el codigo del perro
+    mmu_mapear_pagina(                    // Mapeamos temporalmente la direccion
+        0x402000,                         // de la cucha en la direccion 0x402000
+        rcr3(),                           // para poder copiar el codigo del perro
         mmu_xy2fisica(perro->x, perro->y),
         PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT
     );
 
+    mmu_copiar_pagina(TASK_PERRO_CODE_ADDR(index_jugador, index_tipo), 0x402000);   // Copiamos el codigo del perro a la cucha
 
-    mmu_copiar_pagina(code_addr, 0x402000);   // Copiamos el codigo del perro a la cucha
+    // Ponemos los argumentos en el stack de la tarea
+    uint* stack = (uint*) (0x403000 - 12);
+    stack[0] = perro->jugador->x_cucha;
+    stack[1] = perro->jugador->y_cucha;
+
     mmu_unmapear_pagina(0x402000, rcr3());    // Desmapeamos la cucha
 
     return (uint) pd;
+}
+
+void mmu_mover_perro(perro_t *perro, int viejo_x, int viejo_y) {
+    // Copiamos el codigo del perro a su nueva ubicacion en el mapa
+    mmu_mapear_pagina(         // Mapeamos temporalmente la nueva ubicacion
+        0x402000,              // del perro en la direccion 0x402000 con permisos
+        rcr3(),                // de kernel para poder copiar el codigo
+        mmu_xy2fisica(perro->x, perro->y),
+        PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT
+    );
+
+    mmu_copiar_pagina(0x401000, 0x402000);   // Copiamos el codigo del perro a la nueva ubicacion
+
+    mmu_unmapear_pagina(0x402000, rcr3());    // Desmapeamos la nueva ubicacion
+
+    // Mapeamos la nueva ubicacion del perro para codigo y stack
+    mmu_mapear_pagina(
+        CODIGO_BASE,
+        (uint) rcr3(),
+        mmu_xy2fisica(perro->x, perro->y),
+        PAGE_ATTR_USER | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT
+    );
+
+    // Mapeamos la nueva ubicacion read only y con permisos de usuario
+    mmu_mapear_pagina(
+        mmu_xy2virtual(perro->x, perro->y),
+        (uint) rcr3(),
+        mmu_xy2fisica(perro->x, perro->y),
+        PAGE_ATTR_USER | PAGE_ATTR_PRESENT
+    );
 }
 
 uint mmu_xy2fisica(uint x, uint y) {

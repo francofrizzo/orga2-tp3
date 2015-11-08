@@ -22,25 +22,30 @@
 #define TIPO_1                            0
 #define TIPO_2                            1
 
+/* Perros en la GDT */
+#define GDT_IDX_TSS_PERRO(jugador, i) (GDT_IDX_PRIMER_PERRO + jugador * MAX_CANT_PERROS_VIVOS + i)
+#define GDT_OFF_TSS_PERRO(jugador, i) (GDT_IDX_TSS_PERRO(jugador, i) << 3)
+#define TSS_PERRO(jugador, i) (GDT_OFF_TSS_PERRO(jugador, i) | GDT_DPL_KERNEL)
+
 typedef enum direccion_e { ARR = 0x4, ABA = 0x7, DER = 0xA, IZQ = 0xD, AQUI = 0x10} direccion;
 
 struct jugador_t;
 
 typedef struct perro_t {
 
-	// ~~~ para ser completado ~~~
-  uint index;  // indice de 0 a 15
-  struct jugador_t *jugador;
+    // ~~~ para ser completado ~~~
+    uint index;  // indice de 0 a 15
+    struct jugador_t *jugador;
 
-  uint id;     // id unica tarea
-  uint tipo;   // raza del perro
-  uint libre;  // libre: -true- slot disponible para lanzar perro  / -false- ya hay un perro vivo
+    uint id;     // id unica tarea
+    uint tipo;   // raza del perro
+    uint libre;  // libre: -true- slot disponible para lanzar perro  / -false- ya hay un perro vivo
 
-  uint x;
-  uint y;
+    uint x;
+    uint y;
 
-  uint huesos;
-  uint indice_reloj;
+    uint huesos;
+    uint indice_reloj;
 
 } perro_t;
 
@@ -51,14 +56,15 @@ extern perro_t *game_perro_actual;
 
 
 typedef struct jugador_t {
-  uint index;    // 0 o 1
-  perro_t perros[MAX_CANT_PERROS_VIVOS];   // los perros del jugador
-  uint x_cucha, y_cucha;
+    uint index;    // 0 o 1
+    perro_t perros[MAX_CANT_PERROS_VIVOS];   // los perros del jugador
+    uint x_cucha, y_cucha;
 
-  // posicion, puntos, ordenes, etc.
-	// completar si es necesario.
-	int x, y;  // posicion
-  uint puntos;
+    // posicion, puntos, ordenes, etc.
+    // completar si es necesario.
+    int x, y;  // posicion
+    uint puntos;
+    uint ultima_orden;
 
 } jugador_t;
 
@@ -79,9 +85,12 @@ uint game_xy2lineal();
 // devuelve si la posicion dada es valida o no
 uint game_es_posicion_valida(int x, int y);
 
+// transforma código de dirección en valores x e y 
+uint game_dir2xy(/* in */ direccion dir, /* out */ int *x, /* out */ int *y);
+
 /*
 ================================================================================
-                          ~~~ auxiliares de perros ~~~
+                           ~~~ auxiliares de perros ~~~
 ================================================================================
 */
 
@@ -112,7 +121,7 @@ void game_perro_ver_si_en_cucha(perro_t *perro);
 
 /*
 ================================================================================
-                         ~~~ auxiliares de jugadores ~~~
+                        ~~~ auxiliares de jugadores ~~~
 ================================================================================
 */
 
@@ -134,7 +143,7 @@ void game_jugador_dar_orden(jugador_t *jugador, int orden);
 
 /*
 ================================================================================
-                         ~~~ auxiliares del juego ~~~
+                        ~~~ auxiliares del juego ~~~
 ================================================================================
 */
 
@@ -145,10 +154,16 @@ void game_atender_tick(perro_t *perro);
 // devuelve la cantidad de huesos que hay en la posición pasada como parametro
 uint game_huesos_en_posicion(uint x, uint y);
 
+// disminuye en uno la cantiddad de huesos en la posicion pasada como parametro
+void game_dec_huesos(uint x, uint y);
+
 // devuelve algun perro que esté en la posicion pasada (hay max 2, uno por jugador)
 perro_t* game_perro_en_posicion(uint x, uint y);
 
 // termina si se agotaron los huesos o si hace tiempo que no hay ningun cambio
 void game_terminar_si_es_hora();
+
+// se fija si la posicion dada contiene algun perro del jugador pasado por parametro
+uint game_hay_perros_de(uint x, uint y, jugador_t* jugador);
 
 #endif  /* !__GAME_H__ */

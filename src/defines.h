@@ -51,6 +51,7 @@ typedef unsigned int   uint;
 #define GDT_IDX_VIDEO           12
 #define GDT_IDX_TSS_INICIAL     20
 #define GDT_IDX_TSS_IDLE        21
+#define GDT_IDX_PRIMER_PERRO    22
 
 /* Offsets en la gdt */
 /* -------------------------------------------------------------------------- */

@@ -6,13 +6,11 @@
 
 %include "imprimir.mac"
 
+TSS_IDLE equ (21 << 3)
+
 BITS 32
 
-sched_tarea_offset:     dd 0x00
-sched_tarea_selector:   dw 0x00
-
 ;; Pantalla
-extern screen_limpiar
 extern print
 extern print_dec
 
@@ -25,9 +23,9 @@ extern sched_tarea_actual
 
 ;; Rutinas de alto nivel
 extern game_atender_tick
-extern game_perro_actual
 extern game_atender_teclado
 extern game_syscall_manejar
+extern game_perro_termino
 
 ;;
 ;; Definición de MACROS
@@ -37,9 +35,8 @@ extern game_syscall_manejar
 global _isr%1
 
 _isr%1:
+    ; imprimimos un mensaje de error
     mov ebx, %1
-
-    call screen_limpiar
 
     push word  0x07           ; attr
     push dword 0              ; y
@@ -54,8 +51,19 @@ _isr%1:
     push dword 2              ; size
     push ebx                  ; numero
     call print_dec
+    add esp, 2 + 4 * 4
     
-    jmp $
+    ; eliminamos la tarea que causo la excepcion
+
+    call sched_tarea_actual
+
+    push eax
+    call game_perro_termino
+    add esp, 4
+
+    jmp TSS_IDLE:0
+
+    jmp $ ; por si algo sale mal
 
 %endmacro
 
@@ -67,6 +75,11 @@ excepcion_msg db  "Se produjo una excepcion de tipo", 0
 excepcion_len equ $ - excepcion_msg
 
 ; Scheduler
+sched_tarea_offset:     dd 0x00
+sched_tarea_selector:   dw 0x00
+
+; Syscalls
+syscall_ret_temp:       dd 0x00
 
 ;;
 ;; Rutina de atención de las EXCEPCIONES
@@ -98,16 +111,26 @@ ISR 19
 
 global _isr32
 _isr32:
-    
     pushad
     call fin_intr_pic1
     
-    push game_perro_actual
-    call game_atender_tick
-    add esp, 4
+    call sched_atender_tick
+
+    str cx
+    cmp ax, cx
+    je .fin
+
+    ; cmp ax, TSS_IDLE
+    ; je .no_break
+    ; xchg bx, bx
+    ; .no_break:
+
+    mov [sched_tarea_selector], ax
+    jmp far [sched_tarea_offset]
     
-    popad
-    iret
+    .fin:
+        popad
+        iret
 
 ;;
 ;; Rutina de atención del TECLADO
@@ -131,18 +154,28 @@ _isr33:
 ;; Rutinas de atención de las SYSCALLS
 ;; -------------------------------------------------------------------------- ;;
 
-global _isr46
-_isr46:
+global _isr70
+_isr70:
     
+    ; Pusheamos los registros
     pushad
     
+    ; Apilamos los parametros y resolvemos la syscall
     push ecx
     push eax
     call game_syscall_manejar
     add esp, 2 * 4
     
-    popad
-    mov eax, 0x42
+    ; Chequeamos que no estemos en la tarea idle
+    str cx
+    cmp cx, TSS_IDLE
+    je .fin  ; Si la tarea era la idle, simplemente retornamos
+    
+    ; Pasamos a la tarea idle hasta que termine el quantum
+    jmp TSS_IDLE:0
 
-    iret
-
+    .fin:
+        mov [syscall_ret_temp], eax  ; salvamos el valor de retorno en una variable temporal
+        popad                        ; recuperamos los registros
+        mov eax, [syscall_ret_temp]  ; en eax volvemos a poner el valor de retorno
+        iret                         ; fin de la rutina

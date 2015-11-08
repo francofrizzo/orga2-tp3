@@ -50,16 +50,16 @@ void tss_inicializar_perro(tss* tss_perro, perro_t* perro) {
 	tss_perro->eip    = CODIGO_BASE;     
 	tss_perro->ebp    = TASK_PILA_BASE;
 	tss_perro->esp    = TASK_PILA_BASE;
-	tss_perro->cr3    = mmu_inicializar_memoria_perro(perro, perro->jugador->index, perro->index);
+	tss_perro->cr3    = mmu_inicializar_memoria_perro(perro, perro->jugador->index, perro->tipo);
 	tss_perro->eflags = 0x202;
 	tss_perro->esp0   = mmu_proxima_pagina_fisica_libre();
 	tss_perro->ss0    = SEG_DATA_KERNEL;
 	tss_perro->iomap  = 0xFFFF;
 }
 
-void tss_agregar_a_gdt(tss* tss_in, gdt_entry* gdt_in, int idx) {
-	if (0 < idx && idx < GDT_COUNT) {
-		gdt_in[idx] = (gdt_entry) {
+void tss_agregar_a_gdt(tss* tss_in, int index) {
+	if (0 < index && index < GDT_COUNT) {
+		gdt[index] = (gdt_entry) {
 	        (unsigned short)     TSS_SIZE              & 0x0000FFFF, /* limit[0:15]  */
 	        (unsigned short)     (uint) tss_in         & 0x0000FFFF, /* base[0:15]   */
 	        (unsigned char)     ((uint) tss_in >> 16)  & 0x000000FF, /* base[23:16]  */
@@ -86,5 +86,5 @@ void tss_perro_prueba() {
 
     tss_inicializar_perro(&tss_prueba, &tomi);
 
-    tss_agregar_a_gdt(&tss_prueba, (gdt_entry*) &gdt, 22);
+    tss_agregar_a_gdt(&tss_prueba, 22);
 }

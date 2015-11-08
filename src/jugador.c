@@ -33,7 +33,7 @@ void game_jugador_inicializar(jugador_t *j)
 	int i;
 	for (i = 0; i < MAX_CANT_PERROS_VIVOS; i++)
 	{
-		uint gdt_index = 0; // CAMBIAR POR ALGO VALIDO
+		uint gdt_index = GDT_IDX_TSS_PERRO(j->index, i);
 		game_perro_inicializar(&j->perros[i], j, i, gdt_index + i*8);
 	}
 
@@ -74,8 +74,16 @@ uint game_jugador_moverse(jugador_t *j, int x, int y)
 	int nuevo_x = j->x + x;
 	int nuevo_y = j->y + y;
 
-    // ~~~ completar ~~~
-    return nuevo_x + nuevo_y; // uso todas las variables locales para que no tire warning -> error
+	if (game_es_posicion_valida(nuevo_x, nuevo_y)) {
+		screen_borrar_jugador(j);
+		j->x = nuevo_x;
+		j->y = nuevo_y;
+		screen_pintar_jugador(j);
+	} else {
+		return -1;
+	}
+
+    return 0;
 }
 
 // descarga 1 hueso en la cucha y actualiza el screen
@@ -95,7 +103,7 @@ void game_jugador_anotar_punto(jugador_t *j)
 // guarda la orden en el jugador para que los perros puedan preguntarla luego (mediante un syscall)
 void game_jugador_dar_orden(jugador_t *jugador, int orden)
 {
-	
+	jugador->ultima_orden = orden;
 }
 
 
