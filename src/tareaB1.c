@@ -21,6 +21,11 @@
 
 
 void task(int x, int y) {
+    while (syscall_moverse(IZQ) == 0) {
+        while (syscall_moverse(ARR) == 0) {}
+        syscall_moverse(IZQ);
+        while (syscall_moverse(ABA) == 0) {}
+    }
     /* Tarea */
 
 // parte (2)

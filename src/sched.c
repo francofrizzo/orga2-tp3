@@ -81,24 +81,27 @@ uint sched_proxima_a_ejecutar() {
         i = 0;
     }
 
-    print_hex(i, 2, 0, 0, C_FG_LIGHT_GREY | C_BG_BLACK);
-
     return i;
 }
 
 ushort sched_atender_tick() {
-    game_atender_tick(scheduler.tasks[scheduler.current].perro);
+    if (!debug_screen) {
+        game_atender_tick(scheduler.tasks[scheduler.current].perro);
 
-    scheduler.current = sched_proxima_a_ejecutar();
-    game_perro_actual = scheduler.tasks[scheduler.current].perro;
+        scheduler.current = sched_proxima_a_ejecutar();
+        game_perro_actual = scheduler.tasks[scheduler.current].perro;
 
-    if (scheduler.proximo_jugador == JUGADOR_A) {
-        scheduler.last_jugadorA = scheduler.current;
-        scheduler.proximo_jugador = JUGADOR_B;
+        if (scheduler.proximo_jugador == JUGADOR_A) {
+            scheduler.last_jugadorA = scheduler.current;
+            scheduler.proximo_jugador = JUGADOR_B;
+        } else {
+            scheduler.last_jugadorB = scheduler.current;
+            scheduler.proximo_jugador = JUGADOR_A;
+        }
+
+        tlbflush(); // ES NECESARIO?
+        return scheduler.tasks[scheduler.current].gdt_index;
     } else {
-        scheduler.last_jugadorB = scheduler.current;
-        scheduler.proximo_jugador = JUGADOR_A;
+        return TSS_IDLE;
     }
-
-    return scheduler.tasks[scheduler.current].gdt_index;
 }

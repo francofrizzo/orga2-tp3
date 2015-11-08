@@ -10,5 +10,8 @@
 
 void task(int x_target, int y_target) {
     /* Tarea */
+    int a = 0;
+    a = 5 / a;
+
   while(1) { __asm __volatile("mov $2, %%eax":::"eax"); }
 }

@@ -42,7 +42,7 @@ uint mmu_inicializar_dir_kernel() {
 
     mmu_inicializar_pagina(pd_kernel);                // limpiamos el directorio
 
-    pd_kernel[0] = (BASE_PT_KERNEL(0) & 0xFFFFF000) | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;  // seteamos la primera entrada del directorio, atributos: r/w, p
+    pd_kernel[0] = (BASE_PT_KERNEL(0) & 0xFFFFF000) | PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT;  // seteamos la primera entrada del directorio
 
     int i;
     for (i = 0; i < 1024; i++) {                      // mapeamos con identity mapping las primeras 1024 paginas
@@ -61,6 +61,8 @@ uint mmu_unmapear_pagina (uint virtual, uint cr3) {
 
     pt[pt_index] = pt[pt_index] & 0xFFFFFFFE;         // ponemos en 0 el bit de presente
 
+    tlbflush();  // VERIFICAR
+
     return 0;
 }
 
@@ -76,7 +78,9 @@ void mmu_inicializar() {
 
 uint mmu_proxima_pagina_fisica_libre() {
     uint res = prox_pag_libre;
-    prox_pag_libre = prox_pag_libre + PAGE_SIZE;
+    if (prox_pag_libre < AREA_LIBRE_LIM) {
+        prox_pag_libre = prox_pag_libre + PAGE_SIZE;  // ATENCION: si se acaba el area libre se rompe todo
+    }
     return res;
 }
 
@@ -166,6 +170,7 @@ void mmu_mover_perro(perro_t *perro, int viejo_x, int viejo_y) {
         mmu_xy2fisica(perro->x, perro->y),
         PAGE_ATTR_READ_WRITE | PAGE_ATTR_PRESENT
     );
+
 
     mmu_copiar_pagina(0x401000, 0x402000);   // Copiamos el codigo del perro a la nueva ubicacion
 

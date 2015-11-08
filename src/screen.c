@@ -8,19 +8,29 @@ definicion de funciones del scheduler
 #include "screen.h"
 #include "game.h"
 
-#define POSICION_RELOJES_F   46
-#define POSICION_RELOJES_C_A 4
-#define POSICION_RELOJES_C_B 60
+#define POSICION_RELOJES_F    46
+#define POSICION_RELOJES_C_A   4
+#define POSICION_RELOJES_C_B  60
+
+#define DBG_OFF_X             25
+#define DBG_OFF_Y              6
+#define DBG_WIDTH             30
+#define DBG_HEIGHT            38
+
 extern int ultimo_cambio;
 
 extern jugador_t jugadorA, jugadorB;
-
 
 static ca (*p)[VIDEO_COLS] = (ca (*)[VIDEO_COLS]) VIDEO;
 
 const char reloj[] = "|/-\\";
 #define reloj_size 4
 
+debug_data_t debug_data;
+uint debug_screen = FALSE;
+
+// Memoria reservada para almacenar una copia de la pantalla
+ca p_copia[VIDEO_FILS][VIDEO_COLS];
 
 void screen_actualizar_reloj_global()
 {
@@ -279,39 +289,116 @@ void screen_stop_game_show_winner(jugador_t *j) {
     while(1){}
 }
 
-void screen_limpiar()
-{
+void screen_limpiar() {
     screen_pintar_rect(' ', 0, 0, 0, VIDEO_FILS, VIDEO_COLS);
 }
 
+void screen_guardar_copia() {
+    int i;
+    int j;
+    for (i = 0; i < VIDEO_FILS; i++) {
+        for (j = 0; j < VIDEO_COLS; j++) {
+            p_copia[i][j] = p[i][j];
+        }
+    }
+}
+
+void screen_leer_copia() {
+    int i;
+    int j;
+    for (i = 0; i < VIDEO_FILS; i++) {
+        for (j = 0; j < VIDEO_COLS; j++) {
+            p[i][j] = p_copia[i][j];
+        }
+    }
+}
+
+void screen_show_debug_mode() {
+    if (debug_mode) {
+        print("Modo DEBUG activado", 30, 0, C_BG_BLACK | C_FG_LIGHT_GREY);
+    } else {
+        print("                   ", 30, 0, C_BG_BLACK | C_FG_LIGHT_GREY);
+    }
+}
+
+
 void screen_show_debug_info() {
-    int offy = 8; //(50/2 - 11);
-    int offx = 25; //(80/2 - 20);
+    screen_guardar_copia();
 
-    int ancho = 30;
-    int alto = 34;
+    // Fondo
+    screen_pintar_rect(' ', C_BG_RED, DBG_OFF_Y, DBG_OFF_X, 4, DBG_WIDTH);
+    screen_pintar_rect(' ', C_BG_LIGHT_GREY, DBG_OFF_Y + 4, DBG_OFF_X, DBG_HEIGHT - 4, DBG_WIDTH);
+    
+    // Bordes
+    screen_pintar_linea_v(' ', C_BG_BLACK, DBG_OFF_Y, DBG_OFF_X, DBG_HEIGHT);
+    screen_pintar_linea_v(' ', C_BG_BLACK, DBG_OFF_Y, DBG_OFF_X + DBG_WIDTH - 1, DBG_HEIGHT);
+    screen_pintar_linea_h(' ', C_BG_BLACK, DBG_OFF_Y, DBG_OFF_X, DBG_WIDTH);
+    screen_pintar_linea_h(' ', C_BG_BLACK, DBG_OFF_Y + DBG_HEIGHT - 1, DBG_OFF_X, DBG_WIDTH);
 
-    screen_pintar_rect(' ', C_BG_LIGHT_GREY, offy, offx, alto, ancho);
-    screen_pintar_linea_h(' ', C_BG_RED, offy + 1, offx, ancho);
-    screen_pintar_linea_v(' ', C_BG_BLACK, offy, offx, alto);
-    screen_pintar_linea_v(' ', C_BG_BLACK, offy, offx + ancho - 1, alto);
-    screen_pintar_linea_h(' ', C_BG_BLACK, offy, offx, ancho);
-    screen_pintar_linea_h(' ', C_BG_BLACK, offy + alto - 1, offx, ancho);
+    // Labels
+    print("Excepcion de tipo", DBG_OFF_X + 2, DBG_OFF_Y + 2, C_BG_RED | C_FG_LIGHT_GREY);
 
-    // offy++; offx++; alto -= 2; ancho-=2;
+    print("eax",        DBG_OFF_X +  2, DBG_OFF_Y +  5, C_BG_LIGHT_GREY | C_FG_RED);
+    print("ebx",        DBG_OFF_X +  2, DBG_OFF_Y +  7, C_BG_LIGHT_GREY | C_FG_RED);
+    print("ecx",        DBG_OFF_X +  2, DBG_OFF_Y +  9, C_BG_LIGHT_GREY | C_FG_RED);
+    print("edx",        DBG_OFF_X +  2, DBG_OFF_Y + 11, C_BG_LIGHT_GREY | C_FG_RED);
+    print("esi",        DBG_OFF_X +  2, DBG_OFF_Y + 13, C_BG_LIGHT_GREY | C_FG_RED);
+    print("edi",        DBG_OFF_X +  2, DBG_OFF_Y + 15, C_BG_LIGHT_GREY | C_FG_RED);
+    print("ebp",        DBG_OFF_X +  2, DBG_OFF_Y + 17, C_BG_LIGHT_GREY | C_FG_RED);
+    print("esp",        DBG_OFF_X +  2, DBG_OFF_Y + 19, C_BG_LIGHT_GREY | C_FG_RED);
+    print("eip",        DBG_OFF_X +  2, DBG_OFF_Y + 21, C_BG_LIGHT_GREY | C_FG_RED);
+    print(" cs",        DBG_OFF_X +  2, DBG_OFF_Y + 23, C_BG_LIGHT_GREY | C_FG_RED);
+    print(" ds",        DBG_OFF_X +  2, DBG_OFF_Y + 25, C_BG_LIGHT_GREY | C_FG_RED);
+    print(" es",        DBG_OFF_X +  2, DBG_OFF_Y + 27, C_BG_LIGHT_GREY | C_FG_RED);
+    print(" fs",        DBG_OFF_X +  2, DBG_OFF_Y + 29, C_BG_LIGHT_GREY | C_FG_RED);
+    print(" gs",        DBG_OFF_X +  2, DBG_OFF_Y + 31, C_BG_LIGHT_GREY | C_FG_RED);
+    print(" ss",        DBG_OFF_X +  2, DBG_OFF_Y + 33, C_BG_LIGHT_GREY | C_FG_RED);
+    print("eflags",     DBG_OFF_X +  2, DBG_OFF_Y + 35, C_BG_LIGHT_GREY | C_FG_RED);
 
-    // screen_pintar_rect('*', C_BW, offy, offx, alto, ancho);
+    print("cr0",        DBG_OFF_X + 16, DBG_OFF_Y +  5, C_BG_LIGHT_GREY | C_FG_RED);
+    print("cr2",        DBG_OFF_X + 16, DBG_OFF_Y +  7, C_BG_LIGHT_GREY | C_FG_RED);
+    print("cr3",        DBG_OFF_X + 16, DBG_OFF_Y +  9, C_BG_LIGHT_GREY | C_FG_RED);
+    print("cr4",        DBG_OFF_X + 16, DBG_OFF_Y + 11, C_BG_LIGHT_GREY | C_FG_RED);
+    print("error code", DBG_OFF_X + 16, DBG_OFF_Y + 14, C_BG_LIGHT_GREY | C_FG_RED);
+    print("stack",      DBG_OFF_X + 16, DBG_OFF_Y + 22, C_BG_LIGHT_GREY | C_FG_RED);
 
-    // offy++; offx++; alto -= 2; ancho-=2;
+    // Contenido
+    print_dec(debug_data.tipo,   2, DBG_OFF_X + 20,            DBG_OFF_Y + 2, C_BG_RED | C_FG_LIGHT_GREY);  // tipo
+    print    (debug_data.mnemonico, DBG_OFF_X + DBG_WIDTH - 5, DBG_OFF_Y + 2, C_BG_RED | C_FG_LIGHT_GREY);  // mnemonico
 
-    // screen_pintar_rect(' ', C_BG_LIGHT_GREY | C_FG_BLACK, offy, offx, alto, ancho);
+    print_hex(debug_data.eax,        8, DBG_OFF_X +  6, DBG_OFF_Y +  5, C_BG_LIGHT_GREY | C_FG_BLACK);  // eax
+    print_hex(debug_data.ebx,        8, DBG_OFF_X +  6, DBG_OFF_Y +  7, C_BG_LIGHT_GREY | C_FG_BLACK);  // ebx
+    print_hex(debug_data.ecx,        8, DBG_OFF_X +  6, DBG_OFF_Y +  9, C_BG_LIGHT_GREY | C_FG_BLACK);  // ecx
+    print_hex(debug_data.edx,        8, DBG_OFF_X +  6, DBG_OFF_Y + 11, C_BG_LIGHT_GREY | C_FG_BLACK);  // edx
+    print_hex(debug_data.esi,        8, DBG_OFF_X +  6, DBG_OFF_Y + 13, C_BG_LIGHT_GREY | C_FG_BLACK);  // esi
+    print_hex(debug_data.edi,        8, DBG_OFF_X +  6, DBG_OFF_Y + 15, C_BG_LIGHT_GREY | C_FG_BLACK);  // edi
+    print_hex(debug_data.ebp,        8, DBG_OFF_X +  6, DBG_OFF_Y + 17, C_BG_LIGHT_GREY | C_FG_BLACK);  // ebp
+    print_hex(debug_data.esp,        8, DBG_OFF_X +  6, DBG_OFF_Y + 19, C_BG_LIGHT_GREY | C_FG_BLACK);  // esp
+    print_hex(debug_data.eip,        8, DBG_OFF_X +  6, DBG_OFF_Y + 21, C_BG_LIGHT_GREY | C_FG_BLACK);  // eip
+    print_hex(debug_data.cs,         4, DBG_OFF_X +  6, DBG_OFF_Y + 23, C_BG_LIGHT_GREY | C_FG_BLACK);  // cs
+    print_hex(debug_data.ds,         4, DBG_OFF_X +  6, DBG_OFF_Y + 25, C_BG_LIGHT_GREY | C_FG_BLACK);  // ds
+    print_hex(debug_data.es,         4, DBG_OFF_X +  6, DBG_OFF_Y + 27, C_BG_LIGHT_GREY | C_FG_BLACK);  // es
+    print_hex(debug_data.fs,         4, DBG_OFF_X +  6, DBG_OFF_Y + 29, C_BG_LIGHT_GREY | C_FG_BLACK);  // fs
+    print_hex(debug_data.gs,         4, DBG_OFF_X +  6, DBG_OFF_Y + 31, C_BG_LIGHT_GREY | C_FG_BLACK);  // gs
+    print_hex(debug_data.ss,         4, DBG_OFF_X +  6, DBG_OFF_Y + 33, C_BG_LIGHT_GREY | C_FG_BLACK);  // ss
+    print_hex(debug_data.eflags,     8, DBG_OFF_X +  9, DBG_OFF_Y + 35, C_BG_LIGHT_GREY | C_FG_BLACK);  // eflags
 
-    // print("EL GANADOR ES EL JUGADOR",   offx+5  , offy+3 , C_BG_LIGHT_GREY | C_FG_BLACK);
+    print_hex(debug_data.cr0,        8, DBG_OFF_X + 20, DBG_OFF_Y +  5, C_BG_LIGHT_GREY | C_FG_BLACK);  // cr0
+    print_hex(debug_data.cr2,        8, DBG_OFF_X + 20, DBG_OFF_Y +  7, C_BG_LIGHT_GREY | C_FG_BLACK);  // cr2
+    print_hex(debug_data.cr3,        8, DBG_OFF_X + 20, DBG_OFF_Y +  9, C_BG_LIGHT_GREY | C_FG_BLACK);  // cr3
+    print_hex(debug_data.cr4,        8, DBG_OFF_X + 20, DBG_OFF_Y + 11, C_BG_LIGHT_GREY | C_FG_BLACK);  // cr4
+    print_hex(debug_data.error_code, 8, DBG_OFF_X + 16, DBG_OFF_Y + 16, C_BG_LIGHT_GREY | C_FG_BLACK);  // error code
 
-    // if(j == NULL)      print("EMPATE", offx+14, offy+6, C_MAKE_BG(color) | C_FG_BLACK);
-    // if(j == &jugadorA) print("<-- A",  offx+15, offy+6, C_BG_LIGHT_GREY  | color);
-    // if(j == &jugadorB) print("B -->",  offx+15, offy+6, C_BG_LIGHT_GREY  | color);
-    // // a partir de aca se termina el unviverso (STOP GAME)
-    // __asm __volatile( "cli\n" : : : );
-    // while(1){}  
+    print_hex(debug_data.stack[0],   8, DBG_OFF_X + 16, DBG_OFF_Y + 24, C_BG_LIGHT_GREY | C_FG_BLACK);  // stack0
+    print_hex(debug_data.stack[1],   8, DBG_OFF_X + 16, DBG_OFF_Y + 25, C_BG_LIGHT_GREY | C_FG_BLACK);  // stack1
+    print_hex(debug_data.stack[2],   8, DBG_OFF_X + 16, DBG_OFF_Y + 26, C_BG_LIGHT_GREY | C_FG_BLACK);  // stack2
+    print_hex(debug_data.stack[3],   8, DBG_OFF_X + 16, DBG_OFF_Y + 27, C_BG_LIGHT_GREY | C_FG_BLACK);  // stack3
+    print_hex(debug_data.stack[4],   8, DBG_OFF_X + 16, DBG_OFF_Y + 28, C_BG_LIGHT_GREY | C_FG_BLACK);  // stack4
+
+    debug_screen = TRUE;
+}
+
+void screen_hide_debug_info() {
+    screen_leer_copia();
+    debug_screen = FALSE;
 }

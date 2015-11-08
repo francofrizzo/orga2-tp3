@@ -13,6 +13,7 @@ BITS 32
 ;; Pantalla
 extern print
 extern print_dec
+extern screen_show_debug_info
 
 ;; PIC
 extern fin_intr_pic1
@@ -28,6 +29,64 @@ extern game_syscall_manejar
 extern game_perro_termino
 
 ;;
+;; Estructura y variables de modo debug
+;; -------------------------------------------------------------------------- ;;
+extern debug_mode
+extern debug_data
+
+struc ddt
+    .tipo       resw 1
+    .mnemonico  resb 4
+    .eax        resd 1
+    .ebx        resd 1
+    .ecx        resd 1
+    .edx        resd 1
+    .esi        resd 1
+    .edi        resd 1
+    .ebp        resd 1
+    .esp        resd 1
+    .eip        resd 1
+    .cs         resw 1
+    .ds         resw 1
+    .es         resw 1
+    .fs         resw 1
+    .gs         resw 1
+    .ss         resw 1
+    .eflags     resd 1
+    .cr0        resd 1
+    .cr2        resd 1
+    .cr3        resd 1
+    .cr4        resd 1
+    .error_code resd 1
+    .stack      resd 5
+endstruc
+
+;;
+;; Mnemonicos de excepciones
+;; -------------------------------------------------------------------------- ;;
+
+%define mnemonico_0  `#DE\0`
+%define mnemonico_1  `#DB\0`
+%define mnemonico_2  `\0\0\0\0`
+%define mnemonico_3  `#BP\0`
+%define mnemonico_4  `#OF\0`
+%define mnemonico_5  `#BR\0`
+%define mnemonico_6  `#UD\0`
+%define mnemonico_7  `#NM\0`
+%define mnemonico_8  `#DF\0`
+%define mnemonico_9  `\0\0\0\0`
+%define mnemonico_10 `#TS\0`
+%define mnemonico_11 `#NP\0`
+%define mnemonico_12 `#SS\0`
+%define mnemonico_13 `#GP\0`
+%define mnemonico_14 `#PF\0`
+%define mnemonico_15 `\0\0\0\0`
+%define mnemonico_16 `#MF\0`
+%define mnemonico_17 `#AC\0`
+%define mnemonico_18 `#MC\0`
+%define mnemonico_19 `#XM\0`
+
+;;
 ;; Definición de MACROS
 ;; -------------------------------------------------------------------------- ;;
 
@@ -35,35 +94,88 @@ extern game_perro_termino
 global _isr%1
 
 _isr%1:
-    ; imprimimos un mensaje de error
-    mov ebx, %1
+    ; Salvamos eax
+    mov       [debug_data + ddt.eax], eax
 
-    push word  0x07           ; attr
-    push dword 0              ; y
-    push dword 0              ; x
-    push excepcion_msg        ; text
-    call print
-    add esp, 2 + 3 * 4
+    ; Vemos si el modo debug esta activo
+    mov       eax, [debug_mode]
+    cmp       eax, 0
+    je        .chau_tarea
 
-    push word  0x07           ; attr
-    push dword 0              ; y
-    push dword excepcion_len  ; x
-    push dword 2              ; size
-    push ebx                  ; numero
-    call print_dec
-    add esp, 2 + 4 * 4
+        ; Guardamos todos los registros para mostrarlos en pantalla
+        
+        ; Codigo de error y mnemonico
+        mov word   [debug_data + ddt.tipo], %1
+        mov dword  [debug_data + ddt.mnemonico], mnemonico_%1
+
+        ; Registros de proposito general
+        mov       [debug_data + ddt.ebx], ebx
+        mov       [debug_data + ddt.ecx], ecx
+        mov       [debug_data + ddt.edx], edx
+        mov       [debug_data + ddt.esi], esi
+        mov       [debug_data + ddt.edi], edi
+        mov       [debug_data + ddt.ebp], ebp
+        mov       [debug_data + ddt.ds ], ds
+        mov       [debug_data + ddt.es ], es
+        mov       [debug_data + ddt.fs ], fs
+        mov       [debug_data + ddt.gs ], gs
+
+        ; Registros de control
+        mov       eax, cr0
+        mov       [debug_data + ddt.cr0], eax
+        mov       eax, cr2
+        mov       [debug_data + ddt.cr2], eax
+        mov       eax, cr3
+        mov       [debug_data + ddt.cr3], eax
+        mov       eax, cr4
+        mov       [debug_data + ddt.cr4], eax
+
+        ; Registros en stack
+        mov       eax, [esp]
+        mov       [debug_data + ddt.error_code], eax
+        mov       eax, [esp + 4]
+        mov       [debug_data + ddt.eip], eax
+        mov       ax, [esp + 8]
+        mov       [debug_data + ddt.cs], ax
+        mov       eax, [esp + 12]
+        mov       [debug_data + ddt.eflags], eax
+        mov       ecx, [esp + 16]
+        mov       [debug_data + ddt.esp], ecx
+        mov       ax, [esp + 20]
+        mov       [debug_data + ddt.ss], ax
+
+        ; Stack
+        mov       eax, [ecx]
+        mov       [debug_data + ddt.stack], eax
+        mov       eax, [ecx + 4]
+        mov       [debug_data + ddt.stack + 4], eax
+        mov       eax, [ecx + 8]
+        mov       [debug_data + ddt.stack + 8], eax
+        mov       eax, [ecx + 12]
+        mov       [debug_data + ddt.stack + 12], eax
+        mov       eax, [ecx + 16]
+        mov       [debug_data + ddt.stack + 16], eax
     
-    ; eliminamos la tarea que causo la excepcion
+    ; Eliminamos la tarea que causo la excepcion
+    .chau_tarea:
+        call sched_tarea_actual
 
-    call sched_tarea_actual
+        push eax
+        call game_perro_termino
+        add esp, 4
 
-    push eax
-    call game_perro_termino
-    add esp, 4
+    ; Vemos (de nuevo) si el modo debug esta activo
+    mov       eax, [debug_mode]
+    cmp       eax, 0
+    je        .fin
+    
+        ; Mostramos en pantalla la info de debug
+        call screen_show_debug_info
 
-    jmp TSS_IDLE:0
-
-    jmp $ ; por si algo sale mal
+    ; Saltamos a la tarea idle
+    .fin:
+        jmp TSS_IDLE:0
+        jmp $ ; por si algo sale mal
 
 %endmacro
 

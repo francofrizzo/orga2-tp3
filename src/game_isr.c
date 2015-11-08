@@ -9,6 +9,7 @@
 ///                  (deben ser llamadas desde isr.asm)                    ///
 /// ********************************************************************** ///
 
+uint debug_mode = FALSE;
 
 /* Codigos de syscalls */
 /* -------------------------------------------------------------------------- */
@@ -62,7 +63,6 @@ void game_atender_tick(perro_t *perro) {
         game_perro_ver_si_en_cucha(perro);
         screen_actualizar_reloj_perro(perro);
     }
-    // screen_show_debug_info();
 }
 
 #define KB_w        0x11 // 0x91
@@ -89,12 +89,55 @@ void game_atender_tick(perro_t *perro) {
 #define KB_n        0x31 // ?
 #define KB_m        0x32 // ?
 
+#define KB_y        0x15
+
 #define KB_shiftL   0x2a // 0xaa
 #define KB_shiftR   0x36 // 0xb6
 
 // ~~~ debe atender la interrupción de teclado, se le pasa la tecla presionada
 void game_atender_teclado(unsigned char tecla)
 {
+    if (debug_screen) {
+        if (tecla == KB_y) {
+            screen_hide_debug_info();
+        }
+    } else {
+        switch (tecla) {
+            // Lanzar perros
+            case KB_q: game_jugador_lanzar_perro(&jugadorA, TIPO_1, jugadorA.x_cucha, jugadorA.y_cucha); break; // jugador A, tipo 1
+            case KB_e: game_jugador_lanzar_perro(&jugadorA, TIPO_2, jugadorA.x_cucha, jugadorA.y_cucha); break; // jugador A, tipo 2
+            case KB_u: game_jugador_lanzar_perro(&jugadorB, TIPO_1, jugadorB.x_cucha, jugadorB.y_cucha); break; // jugador B, tipo 1
+            case KB_o: game_jugador_lanzar_perro(&jugadorB, TIPO_2, jugadorB.x_cucha, jugadorB.y_cucha); break; // jugador B, tipo 2
+
+            // Moverse (jugador A)
+            case KB_a: game_jugador_moverse(&jugadorA, -1, 0); break; // izquierda
+            case KB_d: game_jugador_moverse(&jugadorA, 1, 0); break; // derecha
+            case KB_w: game_jugador_moverse(&jugadorA, 0, -1); break; // arriba
+            case KB_s: game_jugador_moverse(&jugadorA, 0, 1); break; // abajo
+
+            // Moverse (jugador B)
+            case KB_j: game_jugador_moverse(&jugadorB, -1, 0); break; // izquierda
+            case KB_l: game_jugador_moverse(&jugadorB, 1, 0); break; // derecha
+            case KB_i: game_jugador_moverse(&jugadorB, 0, -1); break; // arriba
+            case KB_k: game_jugador_moverse(&jugadorB, 0, 1); break; // abajo
+
+            // Dar ordenes (jugador A)
+            case KB_z: game_jugador_dar_orden(&jugadorA, 0); break;
+            case KB_x: game_jugador_dar_orden(&jugadorA, 1); break;
+            case KB_c: game_jugador_dar_orden(&jugadorA, 2); break;
+            
+            // Dar ordenes (jugador B)
+            case KB_b: game_jugador_dar_orden(&jugadorB, 0); break;
+            case KB_n: game_jugador_dar_orden(&jugadorB, 1); break;
+            case KB_m: game_jugador_dar_orden(&jugadorB, 2); break;
+
+            // Modo debug
+            case KB_y: debug_mode = debug_mode ? FALSE : TRUE; screen_show_debug_mode(); break;
+
+            default: break;
+        }
+    }
+
     /* // Imprime en pantalla la tecla pulsada
     char tecla_ascii = 0;
 
@@ -128,35 +171,4 @@ void game_atender_teclado(unsigned char tecla)
         screen_pintar(tecla_ascii, C_FG_LIGHT_GREY | C_BG_BLACK, 0, VIDEO_COLS - 12);
     }
     */
-
-    switch (tecla) {
-        // Lanzar perros
-        case KB_q: game_jugador_lanzar_perro(&jugadorA, TIPO_1, jugadorA.x_cucha, jugadorA.y_cucha); break; // jugador A, tipo 1
-        case KB_e: game_jugador_lanzar_perro(&jugadorA, TIPO_2, jugadorA.x_cucha, jugadorA.y_cucha); break; // jugador A, tipo 2
-        case KB_u: game_jugador_lanzar_perro(&jugadorB, TIPO_1, jugadorB.x_cucha, jugadorB.y_cucha); break; // jugador B, tipo 1
-        case KB_o: game_jugador_lanzar_perro(&jugadorB, TIPO_2, jugadorB.x_cucha, jugadorB.y_cucha); break; // jugador B, tipo 2
-
-        // Moverse (jugador A)
-        case KB_a: game_jugador_moverse(&jugadorA, -1, 0); break; // izquierda
-        case KB_d: game_jugador_moverse(&jugadorA, 1, 0); break; // derecha
-        case KB_w: game_jugador_moverse(&jugadorA, 0, -1); break; // arriba
-        case KB_s: game_jugador_moverse(&jugadorA, 0, 1); break; // abajo
-
-        // Moverse (jugador B)
-        case KB_j: game_jugador_moverse(&jugadorB, -1, 0); break; // izquierda
-        case KB_l: game_jugador_moverse(&jugadorB, 1, 0); break; // derecha
-        case KB_i: game_jugador_moverse(&jugadorB, 0, -1); break; // arriba
-        case KB_k: game_jugador_moverse(&jugadorB, 0, 1); break; // abajo
-
-        // Dar ordenes (jugador A)
-        case KB_z: game_jugador_dar_orden(&jugadorA, 0); break;
-        case KB_x: game_jugador_dar_orden(&jugadorA, 1); break;
-        case KB_c: game_jugador_dar_orden(&jugadorA, 2); break;
-        
-        // Dar ordenes (jugador B)
-        case KB_b: game_jugador_dar_orden(&jugadorB, 0); break;
-        case KB_n: game_jugador_dar_orden(&jugadorB, 1); break;
-        case KB_m: game_jugador_dar_orden(&jugadorB, 2); break;
-        default: break;
-    }
 }

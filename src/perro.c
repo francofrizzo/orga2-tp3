@@ -55,17 +55,11 @@ void game_perro_termino(perro_t *perro)
 uint game_perro_mover(perro_t *perro, direccion dir)
 {
     int x, y;
-    /* DEBUG
-        printf("dir vale %i \n", dir);
-    FIN DEBUG */
     uint res = game_dir2xy(dir, &x, &y);
     int nuevo_x = perro->x + x;
     int nuevo_y = perro->y + y;
     int viejo_x = perro->x;
     int viejo_y = perro->y;
-    /* DEBUG
-        printf("Moverse en dir %i - trad ret %i - desp %i,%i - nueva pos %i,%i\n", dir, res, x, y, nuevo_x, nuevo_y);
-    FIN DEBUG */
 
     if (res == 0 &&
         game_es_posicion_valida(nuevo_x, nuevo_y) &&
@@ -78,11 +72,6 @@ uint game_perro_mover(perro_t *perro, direccion dir)
         screen_pintar_perro(perro);
         res = 0;
     } else {
-        /* DEBUG */
-            if (res != 0) printf("Movimiento fallido por direccion invalida");
-            if (! game_es_posicion_valida(nuevo_x, nuevo_y)) printf("Movimiento fallido por posicion invalida");
-            if (game_hay_perros_de(nuevo_x, nuevo_y, perro->jugador)) printf("Movimiento fallido por perro ocupando lugar");
-        /* FIN DEBUG */
     	res = -1;
     }
 

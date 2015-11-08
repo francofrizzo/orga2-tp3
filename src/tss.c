@@ -52,7 +52,7 @@ void tss_inicializar_perro(tss* tss_perro, perro_t* perro) {
 	tss_perro->esp    = TASK_PILA_BASE;
 	tss_perro->cr3    = mmu_inicializar_memoria_perro(perro, perro->jugador->index, perro->tipo);
 	tss_perro->eflags = 0x202;
-	tss_perro->esp0   = mmu_proxima_pagina_fisica_libre();
+	tss_perro->esp0   = mmu_proxima_pagina_fisica_libre() + PAGE_SIZE - 1;
 	tss_perro->ss0    = SEG_DATA_KERNEL;
 	tss_perro->iomap  = 0xFFFF;
 }

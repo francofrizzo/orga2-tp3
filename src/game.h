@@ -54,6 +54,7 @@ extern int escondites[ESCONDITES_CANTIDAD][3];
 extern int ultimo_cambio;
 extern perro_t *game_perro_actual;
 
+extern uint debug_mode;
 
 typedef struct jugador_t {
     uint index;    // 0 o 1

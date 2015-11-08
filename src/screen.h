@@ -33,6 +33,21 @@ typedef struct perro_t perro_t;
 struct jugador_t;
 typedef struct jugador_t jugador_t;
 
+// Estructura para intercambiar info de debugging con las isr
+typedef struct debug_data_t {
+    ushort tipo;
+    char   mnemonico[4];
+    uint   eax, ebx, ecx, edx, esi, edi, ebp, esp, eip;
+    ushort cs, ds, es, fs, gs, ss;
+    uint   eflags, cr0, cr2, cr3, cr4, error_code;
+    uint   stack[5];
+} __attribute__((packed)) debug_data_t;
+
+extern debug_data_t debug_data;
+
+// Booleano para saber si se esta mostrando la pantalla de debug
+extern uint debug_screen;
+
 int printf(const char *fmt, ...);
 
 // pinta un "pixel" de la pantalla
@@ -85,7 +100,10 @@ void screen_pintar_relojes();
 
 void screen_actualizar_posicion_mapa(uint x, uint y);
 void screen_stop_game_show_winner(jugador_t *j);
+
+void screen_show_debug_mode();
 void screen_show_debug_info();
+void screen_hide_debug_info();
 
 void screen_limpiar();
 
