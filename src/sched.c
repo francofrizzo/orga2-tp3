@@ -99,7 +99,8 @@ ushort sched_atender_tick() {
             scheduler.proximo_jugador = JUGADOR_A;
         }
 
-        tlbflush(); // ES NECESARIO?
+        ultimo_cambio--;
+
         return scheduler.tasks[scheduler.current].gdt_index;
     } else {
         return TSS_IDLE;

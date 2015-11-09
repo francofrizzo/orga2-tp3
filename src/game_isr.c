@@ -63,6 +63,7 @@ void game_atender_tick(perro_t *perro) {
         game_perro_ver_si_en_cucha(perro);
         screen_actualizar_reloj_perro(perro);
     }
+    game_terminar_si_es_hora();
 }
 
 #define KB_w        0x11 // 0x91

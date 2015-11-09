@@ -1,0 +1,48 @@
+Ejercicio 1 - Pasaje a modo protegido y segmentación
+a) Completar la Tabla de Descriptores Globales (GDT) con 4 segmentos, dos para código de nivel 0 y 3; y otros dos para datos de nivel 0 y 3. Estos segmentos deben direccionar los primeros 500 MB de memoria. En la GDT, por restricción del trabajo práctico, las primeras 7 posiciónes se consideran utilizadas y no deben utilizarse. El primer índice que deben usar para declarar los segmentos es el 8 (contando desde cero).
+b) Completar el código necesario para pasar a modo protegido y setear la pila del kernel en la dirección 0x27000.
+c) Para probar el funcionamiento de la segmentación, agregar a la GDT un segmento adicional que describa el área de la pantalla en memoria que pueda ser utilizado sólo por el kernel. Escribir una rutina que pinte el extremo superior izquierdo de la pantalla utilizando este segmento. A partir del próximo ítem y para los próximos ejercicios, acceder la memoria de video directamente por medio del segmento de datos de 500MB.
+d) Escribir una rutina que se encargue de limpiar la pantalla y pintar en el área de el mapa un fondo de color (sugerido gris), junto con las dos barras inferiores para cada uno de los jugadores (sugerido rojo y azul). Se recomienda para este ítem implementar las funciones señaladas como auxiliares en screen.h.
+Nota: La GDT es un arreglo de gdt_entry declarado sólo una vez como gdt. El descriptor de la GDT en el código se llama GDT_DESC.
+2. Interrupciones básicas
+a) Completar las entradas necesarias en la IDT para asociar diferentes rutinas a todas las excepciones del procesador. Para tal fin, aprovechar la macro ISR en isr.asm, y la macro IDT_ENTRY en idt.c. Cada rutina de excepción debe indicar en pantalla qué problema se produjo e interrumpir la ejecución. Posteriormente se modificarán estas rutinas para que se continúe la ejecución, resolviendo el problema y desalojando a la tarea que lo produjo.
+b) Hacer lo necesario para que el procesador utilice la IDT creada anteriormente. Generar una excepción para probarla.
+Nota: La IDT es un arreglo de idt_entry declarado solo una vez como idt. El descriptor de la IDT en el código se llama IDT_DESC. Para inicializar la IDT se debe invocar la función idt_inicializar.
+3. Paginación básica
+a) Escribir una rutina que se encargue de limpiar el buffer de video y pintarlo como indica la figura 5. Tener en cuenta que deben ser escritos de forma genérica para posteriormente ser completados con información del sistema. Además, considerar estas imágenes como sugerencias, ya que pueden ser modificadas a gusto según cada grupo mostrando siempre la misma información.
+b) Escribir una rutina encargada de desmapear páginas de memoria mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica). Permite mapear la página física correspondiente a fisica en la dirección virtual virtual utilizando cr3.
+c) Utilizando la función anterior, escribir las rutinas encargadas de inicializar el directorio y tablas de páginas para el kernel (mmu_inicializar_dir_kernel). Es decir, se debe generar un directorio de páginas que mapee, usando identity mapping, las direcciones 0x00000000 a 0x003FFFFF. El directorio de páginas a inicializar se encuentra en la dirección 0x27000, y las tablas de páginas según muestra la figura 1.
+d) Completar el código necesario para activar paginación. Verificar que el sistema sigue funcionando luego de que la paginación sea activada llamando a una rutina que imprima el nombre del grupo en pantalla. Debe estar ubicado en la primer línea de la pantalla alineado a derecha.
+e) Escribir una rutina encargadas de mapear páginas de memoria mmu_unmapear_pagina(unsigned int virtual, unsigned int cr3). Borra el mapeo creado en la dirección virtual virtual utilizando cr3.
+f) Probar la función anterior desmapeando la última página del kernel (0x3FF000).
+4. Paginación dinámica
+a) Escribir una rutina (inicializar_mmu) que se encargue de inicializar las estructuras globales necesarias para administrar la memoria en el area libre (un contador de paginas libres).
+b) Escribir una rutina (mmu_inicializar_memoria_perro) encargada de inicializar un directorio de páginas y tablas de páginas para una tarea, respetando la figura 3. La rutina debe copiar el código de la tarea a su área asignada, es decir la posición indicada por el jugador dentro de el mapa y configurar su directorio según se indica en 4.2.
+Nota: puede ser conveniente agregar a esta función otros parámentros que considere necesarios.
+c) Inicializar el mapa de memoria de una tarea perro e intercambiarlo con el del kernel, luego cambiar el color del fondo del primer caracter de la pantalla y volver a la normalidad. Este ítem no debe estar implementado en la solución final.
+
+Nota: En los ejercicios en donde se modifica el directorio o tabla de páginas, hay que llamar a la función tlbflush para que se invalide la cache de traducción de direcciones.
+5. Atención de interrupciones
+a) Completar las entradas necesarias en la IDT para asociar una rutina a la interrupción del reloj, otra a la interrupción de teclado y por último una a la interrupción de software 0x46.
+b) Escribir la rutina asociada a la interrupción del reloj, para que por cada tick llame a la función game_atender_tick. La misma se encarga de mostrar cada vez que se llame, la animación de un cursor rotando en la esquina inferior derecha de la pantalla. La función screen_actualizar_reloj_global está definida en screen.h.
+c) Escribir la rutina asociada a la interrupción de teclado de forma que si se presiona cualquiera de las teclas a utilizar en el juego, se presente la misma en la esquina superior derecha de la pantalla.
+d) Escribir la rutina asociada a la interrupción 0x46 para que modifique el valor de eax por 0x42. Posteriormente este comportamiento va a ser modificado para atender el servicio del sistema.
+SUGERENCIA: Construir la rutina de assembler lo mas corta posible: guardar los registros, llamar a game_tick, restaurar los registros y salir de la interrupción.
+6. Tareas
+a) Definir las entradas en la GDT que considere necesarias para ser usadas como descriptores de TSS. Minimamente, una para ser utilizada por la tarea_inicial y otra para la tarea Idle.
+b) Completar la entrada de la TSS de la tarea Idle con la información de la tarea Idle. Esta información se encuentra en el archivo tss.c. La tarea Idle se encuentra en la dirección 0x00016000. La pila se alojará en la misma dirección que la pila del kernel y será mapeada con identity mapping. Esta tarea ocupa 1 pagina de 4KB y debe ser “mapeada” con identity mapping. Además la misma debe compartir el mismo CR3 que el kernel.
+c) Construir una función que complete una TSS libre con los datos correspondientes a una tarea. El código de las tareas se encuentra a partir de la dirección 0x00010000 ocupando una pagina de 4kb cada una según indica la figura 1. Para la dirección de la pila se debe utilizar el mismo espacio de la tarea, la misma crecerá desde la base de la tarea. Recordar que las tareas asumen que se habrán apilado sus 2 argumentos y luego una dirección de retorno. Para el mapa de memoria se debe construir uno nuevo utilizando la función mmu_inicializar_dir_perro. Además, tener en cuenta que cada tarea utilizará una pila distinta de nivel 0, para esto se debe pedir una nueva pagina libre a tal fin.
+d) Completar la entrada de la GDT correspondiente a la tarea_inicial.
+e) Completar la entrada de la GDT correspondiente a la tarea Idle.
+f) Escribir el código necesario para ejecutar la tarea Idle, es decir, saltar intercambiando las TSS, entre la tarea_inicial y la tarea Idle.
+g) Modificar la rutina de la interrupción 0x46, para que implemente los servicios según se indica en la sección 4.4, sin desalojar a la tarea que realiza el syscall.
+h) Ejecutar una tarea perro manualmente. Es decir, crearla y saltar a la entrada en la GDT de su respectiva TSS
+Nota: En tss.c están definidas las tss como estructuras TSS. Trabajar en tss.c y kernel.asm.
+7. Scheduler básico
+a) Construir una función para inicializar las estructuras de datos del scheduler.
+b) Crear la función sched_proxima_a_ejecutar() que devuelve el índice de la próxima tarea a ser ejecutada. Construir la rutina de forma que devuelva una tarea de cada jugador por vez según se explica en la sección 4.5.
+c) Crear una función sched_atender_tick() que llame a game_atender_tick() pasando el numero de tarea actual y luego devuelva el indice en la gdt al cual se deberá saltar. Reemplazar el llamado a game_atender_tick por uno a sched_atender_tick en el handler de la interrupción de reloj.
+d) Modificar la rutina de la interrupción 0x46, para que implemente los servicios según se indica en la sección 4.4.
+e) Modificar el código necesario para que se realice el intercambio de tareas por cada ciclo de reloj. El intercambio se realizará según indique la función sched_proxima_a_ejecutar().
+f) Modificar las rutinas de excepciones del procesador para que desalojen a la tarea que estaba corriendo y corran la próxima.
+g) Implementar el mecanismo de debugging explicado en la sección 4.8 que indicará en pantalla la razón del desalojo de una tarea.

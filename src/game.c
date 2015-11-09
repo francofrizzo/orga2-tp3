@@ -21,7 +21,7 @@ jugador_t jugadorA;
 jugador_t jugadorB;
 
 perro_t *game_perro_actual = NULL;
-int ultimo_cambio = MAX_SIN_CAMBIOS;
+int ultimo_cambio = MAX_SIN_CAMBIOS;  // PREGUNTAR POR ESTA VARIABLE!!!
 
 void ASSERT_OR_ERROR(uint value, char* error_msg)
 {
@@ -108,6 +108,27 @@ perro_t* game_perro_en_posicion(uint x, uint y)
 // termina si se agotaron los huesos o si hace tiempo que no hay ningun cambio
 void game_terminar_si_es_hora()
 {
+	// calculamos la cantidad de huesos en juego
+	uint cant_huesos = 0;
+    int i;
+    for (i = 0; i < ESCONDITES_CANTIDAD; i++) {
+        cant_huesos = cant_huesos + escondites[i][2];
+    }
+    for (i = 0; i < MAX_CANT_PERROS_VIVOS; i++) {
+    	if (! jugadorA.perros[i].libre) {
+    		cant_huesos = cant_huesos + jugadorA.perros[i].huesos;
+    	}
+    	if (! jugadorB.perros[i].libre) {
+    		cant_huesos = cant_huesos + jugadorB.perros[i].huesos;
+    	}
+    }
+
+    if (cant_huesos == 0 || ultimo_cambio == 0) {
+        jugador_t* winner = (jugadorA.puntos == jugadorB.puntos) ? NULL :
+            ((jugadorA.puntos > jugadorB.puntos) ? &jugadorA : &jugadorB);
+	    screen_stop_game_show_winner(winner);
+    }
+
 }
 
 // se fija si la posicion dada contiene algun perro del jugador pasado por parametro
