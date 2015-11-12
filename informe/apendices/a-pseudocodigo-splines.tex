@@ -1,0 +1,37 @@
+\section{Pseudocódigo del método de interpolación por \emph{splines}}
+
+    El pseudocódigo que se transcribe a continuación es una versión modificada\footnote{El algoritmo original consideraba también como datos de entrada los valores de la variable independiente en cada uno de los puntos a interpolar. Este detalle fue omitido, ya que en el contexto del presente trabajo estos valores son simplemente los naturales consecutivos $0, 1, \dots, n$. De esta forma, el algoritmo aquí presentado es ligeramente más sencillo que el que puede encontrarse en la fuente citada.} del que puede encontrarse en \cite[Algoritmo 3.4]{Burden}, y permite hallar, dado un conjunto de pares de valores $(k, y_k)$, $k = 0, \dots, n$, los $4n$ coeficientes
+    \[ a_k, b_k, c_k, d_k \qquad k = 0, \dots, n-1 \]
+    de los $n$ polinomios
+    \[ S_k = a_k + b_k (x - x_k) + c_k (x - x_k)^2 + d_k (x - x_k)^3 \qquad k = 0, \dots, n-1 \]
+    que conforman el \emph{spline} cúbico que interpola los puntos dados.
+
+
+    \begin{algorithm}
+      \caption{Coeficientes de \emph{spline} cúbico interpolador}
+      \SetKwInOut{Input}{Entrada} 
+      \SetKwInOut{Output}{Salida} 
+      \vspace{0.5em} \Input{$n$, $a_0 = y_0$, $\dots$, $a_n = y_n$}
+      \vspace{0.5em} \Output{$a_j$, $b_j$, $c_j$, $d_j$ para $j = 0, \dots, n-1$}
+      \vspace{0.5em}
+      \lFor{$i = 1, 2, \dots, n-1$}{
+        $\alpha_i \gets 3 a_{i+1} - 6 a_i + 3 a_{i-1}$
+      }
+      $l_0 \gets 1$ \;
+      $\mu_0 \gets 0$ \;
+      $z_0 \gets 0$ \;
+      \For{$i = 1, 2, \dots, n-1$}{
+        $l_1 \gets 4 - \mu_{i-1}$ \;
+        $\mu_1 \gets 1 / l_1$ \;
+        $z_1 \gets (\alpha_i - z_{i-1}) / l_i$ \;
+      }
+      $z_n \gets 0$ \;
+      $c_n \gets 0$ \;
+      \For{$j = n-1, n-2, \dots, 0$}{
+        $c_j \gets z_j - \mu_j c_{j+1}$ \;
+        $b_j \gets (a_{j+1} - a_j) - (c_{j+1} + 2 c_j) / 3$ \;
+        $d_j \gets (c_{j+1} - c_j) / 3$ \;
+      }
+      \Return $a_j$, $b_j$, $c_j$, $d_j$ para $j = 0, \dots, n-1$ \;
+      \vspace{0.5em}
+    \end{algorithm}

@@ -1,0 +1,174 @@
+\section{Desarrollo}
+
+  El trabajo se realizó de manera gradual, guiado por una serie de ejercicios proporcionados por la cátedra, que brindó también una estructura básica de código sobre la cual trabajar. A continuación, transcribiremos estos ejercicios, que cubren cada uno de los aspectos básicos a tener en cuenta para construir un sistema operativo funcional sobre la arquitectura ya mencionada, y detallaremos cómo se llevó a cabo la resolución de cada uno de ellos.
+
+  \subsection{Pasaje a modo protegido y segmentación}
+    Entre los archivos ya implementados por la cátedra, nos fue proporcionado el código del bootloader, por lo que la primer tarea a la que nos enfrentamos fue la de pasar el procesador a modo protegido, inicializando previamente todas las estructuras necesarias para el funcionamiento del sistema de segmentación, que es activado al realizar este pasaje.
+
+    \begin{enumerate}[label=(\alph*)]
+      \item Completar la Tabla de Descriptores Globales (\acr{GDT}) con 4 segmentos, dos para código de nivel 0 y 3; y otros dos para datos de nivel 0 y 3. Estos segmentos deben direccionar los primeros 500 MB de memoria. En la \acr{GDT}, por restricción del trabajo práctico, las primeras 7 posiciónes se consideran utilizadas y no deben utilizarse. El primer índice que deben usar para declarar los segmentos es el 8 (contando desde cero).
+    \end{enumerate}
+
+    En el archivo \texttt{gdt.c} se declara la variable global \texttt{gdt}, un arreglo de \texttt{gdt\_entry} que representa la \acr{GDT} que utilizará el sistema operativo al pasar a modo protegido. Aquí, usando los índices 8 a 11, completamos las cuatro entradas solicitadas por el ejercicio con los valores que muestra la Tabla \ref{table:gdt_entries}. También calculamos los selectores de segmento correspondientes y los definimos como macros de preprocesador para mantener el código organizado.
+
+    \noindent\begin{table}[h]
+      \scalebox{0.78}{
+        \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|l|l|} \hline
+            Índice & Base                & Limit             & G & DB & L & AVL & P & DPL & S & Type          & Selector de   & Detalles                         \\
+                   &                     &                   &   &    &   &     &   &     &   &               & segmento      &                                  \\ \hline
+            8      & \texttt{0x00000000} & \texttt{0x01F3FF} & 1 & 1  & 0 & 0   & 1 & 0   & 1 & \texttt{0x0A} & \texttt{0x40} & Seg. de código del \emph{kernel} \\
+            9      & \texttt{0x00000000} & \texttt{0x01F3FF} & 1 & 1  & 0 & 0   & 1 & 3   & 1 & \texttt{0x0A} & \texttt{0x4b} & Seg. de código de usuario        \\
+            10     & \texttt{0x00000000} & \texttt{0x01F3FF} & 1 & 1  & 0 & 0   & 1 & 0   & 1 & \texttt{0x02} & \texttt{0x50} & Seg. de datos del \emph{kernel}  \\
+            11     & \texttt{0x00000000} & \texttt{0x01F3FF} & 1 & 1  & 0 & 0   & 1 & 3   & 1 & \texttt{0x02} & \texttt{0x5b} & Seg. de datos de usuario         \\ \hline
+        \end{tabular}
+      }
+      \caption{Descriptores de segmento en la \acr{GDT}.} \label{table:gdt_entries}
+    \end{table}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Completar el código necesario para pasar a modo protegido y setear la pila del \emph{kernel} en la dirección \texttt{0x27000}.
+    \end{enumerate}
+
+    Trabajamos en el archivo \texttt{kernel.asm}, que contendrá el código que permitirá poner gradualmente en funcionamiento al sistema, y que se ejecutará hasta que este sea capaz de correr otras tareas.
+    Luego de llamar a la función \texttt{habilitar\_A20} para activar el A20 Gate, cargamos el descriptor de la \acr{GDT}, que está almacenado en la variable global \texttt{GDT\_DESC}, ejecutando la instrucción \texttt{lgdt}. A continuación seteamos el bit menos significativo del registo \texttt{CR0}, con lo cual queda habilitado el modo protegido. La instrucción inmediatamente siguiente es un \texttt{far jump} a la instrucción inmeditamente siguiente, lo cual permite cargar el registro \texttt{CS} con el selector del segmento de código del \emph{kernel}. Por último, cargamos los registros \texttt{DS} y \texttt{SS} con el selector del segmento de datos del \emph{kernel}, y establecemos la pila en la dirección \texttt{0x27000} cargando este valor en el registro \texttt{ESP}.
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Para probar el funcionamiento de la segmentación, agregar a la \acr{GDT} un segmento adicional que describa el área de la pantalla en memoria que pueda ser utilizado sólo por el \emph{kernel}. Escribir una rutina que pinte el extremo superior izquierdo de la pantalla utilizando este segmento. A partir del próximo ítem y para los próximos ejercicios, acceder la memoria de video directamente por medio del segmento de datos de 500 MB.
+    \end{enumerate}
+   
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Escribir una rutina que se encargue de limpiar la pantalla y pintar en el área de el mapa un fondo de color (sugerido gris), junto con las dos barras inferiores para cada uno de los jugadores (sugerido rojo y azul). Se recomienda para este ítem implementar las funciones señaladas como auxiliares en screen.h.
+      Nota: La \acr{GDT} es un arreglo de \texttt{gdt\_entry} declarado sólo una vez como \texttt{gdt}. El descriptor de la \acr{GDT} en el código se llama \texttt{GDT\_DESC}.
+    \end{enumerate}
+
+  
+  \subsection{Interrupciones básicas}
+    \begin{enumerate}[label=(\alph*)]
+      \item Completar las entradas necesarias en la \acr{IDT} para asociar diferentes rutinas a todas las excepciones del procesador. Para tal fin, aprovechar la macro \texttt{ISR} en \texttt{isr.asm}, y la macro \texttt{IDT\_ENTRY} en \texttt{idt.c}. Cada rutina de excepción debe indicar en pantalla qué problema se produjo e interrumpir la ejecución. Posteriormente se modificarán estas rutinas para que se continúe la ejecución, resolviendo el problema y desalojando a la tarea que lo produjo.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Hacer lo necesario para que el procesador utilice la \acr{IDT} creada anteriormente. Generar una excepción para probarla.
+      Nota: La \acr{IDT} es un arreglo de \texttt{idt\_entry} declarado solo una vez como \texttt{idt}. El descriptor de la \acr{IDT} en el código se llama \texttt{IDT\_DESC}. Para inicializar la \acr{IDT} se debe invocar la función \texttt{idt\_inicializar}.
+    \end{enumerate}
+  
+  \subsection{Paginación básica}
+    \begin{enumerate}[label=(\alph*)]
+      \item Escribir una rutina que se encargue de limpiar el buffer de video y pintarlo como indica la figura 5. Tener en cuenta que deben ser escritos de forma genérica para posteriormente ser completados con información del sistema. Además, considerar estas imágenes como sugerencias, ya que pueden ser modificadas a gusto según cada grupo mostrando siempre la misma información.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Escribir una rutina encargada de desmapear páginas de memoria \texttt{mmu\_mapear\_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica)}. Permite mapear la página física correspondiente a \texttt{fisica} en la dirección virtual \texttt{virtual} utilizando \texttt{cr3}.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Utilizando la función anterior, escribir las rutinas encargadas de inicializar el directorio y tablas de páginas para el \emph{kernel} \texttt{(mmu\_inicializar\_dir\_kernel)}. Es decir, se debe generar un directorio de páginas que mapee, usando \emph{identity mapping}, las direcciones \texttt{0x00000000} a \texttt{0x003FFFFF}. El directorio de páginas a inicializar se encuentra en la dirección \texttt{0x27000}, y las tablas de páginas según muestra la figura 1.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Completar el código necesario para activar paginación. Verificar que el sistema sigue funcionando luego de que la paginación sea activada llamando a una rutina que imprima el nombre del grupo en pantalla. Debe estar ubicado en la primer línea de la pantalla alineado a derecha.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Escribir una rutina encargadas de mapear páginas de memoria \texttt{mmu\_unmapear\_pagina(unsigned int virtual, unsigned int cr3)}. Borra el mapeo creado en la dirección virtual \texttt{virtual} utilizando \texttt{cr3}.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Probar la función anterior desmapeando la última página del \emph{kernel} (\texttt{0x3FF000}).
+    \end{enumerate}
+  
+  \subsection{Paginación dinámica}
+    \begin{enumerate}[label=(\alph*)]
+      \item Escribir una rutina (\texttt{inicializar\_mmu}) que se encargue de inicializar las estructuras globales necesarias para administrar la memoria en el área libre (un contador de paginas libres).
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Escribir una rutina (\texttt{mmu\_inicializar\_memoria\_perro}) encargada de inicializar un directorio de páginas y tablas de páginas para una tarea, respetando la figura 3. La rutina debe copiar el código de la tarea a su área asignada, es decir la posición indicada por el jugador dentro de el mapa y configurar su directorio según se indica en 4.2.
+      Nota: puede ser conveniente agregar a esta función otros parámentros que considere necesarios.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Inicializar el mapa de memoria de una tarea perro e intercambiarlo con el del \emph{kernel}, luego cambiar el color del fondo del primer caracter de la pantalla y volver a la normalidad. Este ítem no debe estar implementado en la solución final.
+      Nota: En los ejercicios en donde se modifica el directorio o tabla de páginas, hay que llamar a la función \texttt{tlbflush} para que se invalide la cache de traducción de direcciones.
+    \end{enumerate}
+  
+  \subsection{Atención de interrupciones}
+    \begin{enumerate}[label=(\alph*)]
+      \item Completar las entradas necesarias en la \acr{IDT} para asociar una rutina a la interrupción del reloj, otra a la interrupción de teclado y por último una a la interrupción de software \texttt{0x46}.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Escribir la rutina asociada a la interrupción del reloj, para que por cada tick llame a la función \texttt{game\_atender\_tick}. La misma se encarga de mostrar cada vez que se llame, la animación de un cursor rotando en la esquina inferior derecha de la pantalla. La función \texttt{screen\_actualizar\_reloj\_global} está definida en \texttt{screen.h}.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Escribir la rutina asociada a la interrupción de teclado de forma que si se presiona cualquiera de las teclas a utilizar en el juego, se presente la misma en la esquina superior derecha de la pantalla.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Escribir la rutina asociada a la interrupción \texttt{0x46} para que modifique el valor de \texttt{EAX} por \texttt{0x42}. Posteriormente este comportamiento va a ser modificado para atender el servicio del sistema.
+      SUGERENCIA: Construir la rutina de assembler lo mas corta posible: guardar los registros, llamar a \texttt{game\_tick}, restaurar los registros y salir de la interrupción.
+    \end{enumerate}
+  
+  \subsection{Tareas}
+    \begin{enumerate}[label=(\alph*)]
+      \item Definir las entradas en la \acr{GDT} que considere necesarias para ser usadas como descriptores de \acr{TSS}. Minimamente, una para ser utilizada por la \texttt{tarea\_inicial} y otra para la tarea \emph{Idle}.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Completar la entrada de la \acr{TSS} de la tarea \emph{Idle} con la información de la tarea \emph{Idle}. Esta información se encuentra en el archivo \texttt{tss.c}. La tarea \emph{Idle} se encuentra en la dirección \texttt{0x00016000}. La pila se alojará en la misma dirección que la pila del \emph{kernel} y será mapeada con identity mapping. Esta tarea ocupa 1 pagina de 4 KB y debe ser ``mapeada'' con identity mapping. Además la misma debe compartir el mismo \texttt{CR3} que el \emph{kernel}.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Construir una función que complete una \acr{TSS} libre con los datos correspondientes a una tarea. El código de las tareas se encuentra a partir de la dirección \texttt{0x00010000} ocupando una pagina de 4 KB cada una según indica la figura 1. Para la dirección de la pila se debe utilizar el mismo espacio de la tarea, la misma crecerá desde la base de la tarea. Recordar que las tareas asumen que se habrán apilado sus 2 argumentos y luego una dirección de retorno. Para el mapa de memoria se debe construir uno nuevo utilizando la función \texttt{mmu\_inicializar\_dir\_perro}. Además, tener en cuenta que cada tarea utilizará una pila distinta de nivel 0, para esto se debe pedir una nueva pagina libre a tal fin.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Completar la entrada de la \acr{GDT} correspondiente a la \texttt{tarea\_inicial}.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Completar la entrada de la \acr{GDT} correspondiente a la tarea \emph{Idle}.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Escribir el código necesario para ejecutar la tarea Idle, es decir, saltar intercambiando las \acr{TSS}, entre la \texttt{tarea\_inicial} y la tarea Idle.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Modificar la rutina de la interrupción \texttt{0x46}, para que implemente los servicios según se indica en la sección 4.4, sin desalojar a la tarea que realiza el syscall.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Ejecutar una tarea perro manualmente. Es decir, crearla y saltar a la entrada en la \acr{GDT} de su respectiva \acr{TSS}
+      Nota: En \texttt{tss.c} están definidas las tss como estructuras \acr{TSS}. Trabajar en \texttt{tss.c} y \texttt{kernel.asm}.
+    \end{enumerate}
+  
+  \subsection{Scheduler básico}
+    \begin{enumerate}[label=(\alph*)]
+      \item Construir una función para inicializar las estructuras de datos del scheduler.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Crear la función \texttt{sched\_proxima\_a\_ejecutar()} que devuelve el índice de la próxima tarea a ser ejecutada. Construir la rutina de forma que devuelva una tarea de cada jugador por vez según se explica en la sección 4.5.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Crear una función \texttt{sched\_atender\_tick()} que llame a \texttt{game\_atender\_tick()} pasando el numero de tarea actual y luego devuelva el indice en la \acr{GDT} al cual se deberá saltar. Reemplazar el llamado a \texttt{game\_atender\_tic}k por uno a \texttt{sched\_atender\_tick} en el handler de la interrupción de reloj.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Modificar la rutina de la interrupción \texttt{0x46}, para que implemente los servicios según se indica en la sección 4.4.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Modificar el código necesario para que se realice el intercambio de tareas por cada ciclo de reloj. El intercambio se realizará según indique la función \texttt{sched\_proxima\_a\_ejecutar()}.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Modificar las rutinas de excepciones del procesador para que desalojen a la tarea que estaba corriendo y corran la próxima.
+    \end{enumerate}
+
+    \begin{enumerate}[resume,label=(\alph*)]
+      \item Implementar el mecanismo de debugging explicado en la sección 4.8 que indicará en pantalla la razón del desalojo de una tarea.
+    \end{enumerate}

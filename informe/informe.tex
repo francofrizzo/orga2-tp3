@@ -1,0 +1,98 @@
+\documentclass[11pt, a4paper, spanish]{article}
+
+\usepackage[a4paper, margin=2.5cm, top=3.5cm, bottom=3.5cm]{geometry} % Define los márgenes
+\usepackage{amsmath, amscd, amssymb, amsthm, latexsym, gensymb} % Paquetes matemáticos
+\usepackage[spanish, es-tabla]{babel} % Traduce los paquetes a español
+\usepackage[utf8]{inputenc} % Codificación UTF8
+\usepackage{fancyhdr} % Encabezados y pies de página
+    \pagestyle{fancyplain}
+\usepackage{enumitem}
+\usepackage{xspace}
+\usepackage[page, toc]{appendix} % Apéndices
+\usepackage[nottoc]{tocbibind} % Referencias en la TDC
+\usepackage{scrextend} % Para usar addmargin
+\usepackage{listings} % Código
+    \lstdefinestyle{customcpp}{
+        belowcaptionskip=1\baselineskip,
+        breaklines=true,
+        xleftmargin=3em,
+        language=C++,
+        basicstyle=\small\ttfamily
+    }
+\usepackage[onelanguage, spanish]{algorithm2e}
+    % \NoCaptionOfAlgo
+    \LinesNumbered\RestyleAlgo{ruled}\IncMargin{1em}\DontPrintSemicolon\SetArgSty{}\SetCommentSty{textsf}\SetFuncSty{textsf}
+    \SetKwProg{For}{para}{ hacer}{fin}
+    \SetKwProg{Fn}{función}{:}{fin}
+\usepackage[pdftex]{graphicx} % Imágenes
+\usepackage[usenames, dvipsnames]{color} % Autoexplicativo
+\usepackage{caption} % Captions sin números
+\usepackage{multirow}
+\usepackage{xfrac} % dfrac
+\usepackage{caratula} % Carátula del DC
+\usepackage{url}
+
+% Bibliografía
+% \usepackage{biblatex}
+% \addbibresource{referencias.bib}
+
+% Comandos personalizados
+\let\strong\textbf
+\renewcommand{\appendixtocname}{Apéndices}
+\renewcommand{\appendixpagename}{Apéndices}
+\theoremstyle{plain}
+    \newtheorem{prop}{Proposición}
+    \newtheorem{lema}{Lema}
+\theoremstyle{remark}
+    \newtheorem{obs}{Observación}
+\setlength{\parskip}{.3em}
+\newcommand{\acr}[1]{\textsc{\lowercase{#1}}} % Acrónimos
+\newcommand{\vid}[1]{\ensuremath{\mathbf{#1}}}
+
+% Encabezado
+\lhead{Organización del Computador II}
+\rhead{Trabajo Práctico Nº 3 - \emph{``Jauría''}}
+% Pie de pagina
+\renewcommand{\footrulewidth}{0.4pt}
+% \lfoot{FCEN}
+% \rfoot{UBA}
+
+\begin{document}
+
+% Datos de carátula
+\materia{Organización del Computador II}
+\titulo{Trabajo Práctico Nº 3}
+\subtitulo{``Jauría''}
+\fecha{Segundo cuatrimestre de 2015}
+
+\integrante{Frizzo, Franco}{013/14}{francofrizzo@gmail.com}
+\integrante{Martínez, Manuela}{160/14}{martinez.manuela.22@gmail.com}
+\integrante{Rabinowicz, Lucía}{105/14}{lu.rabinowicz@gmail.com}
+
+% Carátula
+\maketitle
+\newpage
+
+% Índice
+\tableofcontents
+\clearpage
+
+% Contenido
+\input{secciones/1-introduccion}
+% \clearpage
+\input{secciones/2-el-sistema}
+% \clearpage
+\input{secciones/3-desarrollo}
+% \clearpage
+\input{secciones/4-conclusion}
+\clearpage
+
+% Apéndices
+% \begin{appendices}
+% \end{appendices}
+% \clearpage
+
+% Referencias
+% \printbibliography[heading=bibintoc]
+
+\end{document}
